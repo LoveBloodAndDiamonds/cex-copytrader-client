@@ -51,6 +51,7 @@ class KeysAdmin(ModelView, model=Keys):
     can_edit = True
     can_delete = False
     page_size = 1
+    column_list = [Keys.exchange, Keys.api_key]
 
     async def after_model_change(self, data: dict, model: Keys, is_created: bool, request: Request) -> None:
         UnifiedServiceManager.on_api_keys_update(u=model)
@@ -84,7 +85,7 @@ def register_admin_routes(app: FastAPI) -> None:
         engine=Database.engine,
         templates_dir="app/templates",
         authentication_backend=AdminAuth(secret_key=config.CYPHER_KEY),
-        title="cex-copytrader",
+        title="cex-copytrader-client",
         logo_url=config.ADMIN_LOGO_URL,
     )
     # Регистрируем модели для админки

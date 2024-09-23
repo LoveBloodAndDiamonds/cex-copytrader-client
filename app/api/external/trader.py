@@ -15,7 +15,7 @@ def handle_trader_settings_update(request: Request, data: TraderSettings) -> Res
     """
     # Проверка на то что запрос пришел с master сервера
     if request.client.host != config.MASTER_SERVER_HOST:
-        logger.warning(f"Trader settings event from unknown host: {request.client.host}:{request.client.port}")
+        logger.warning(f"Event({data}) from unknown host: {request.client.host}:{request.client.port}")
         return Response(status_code=403)
 
     UnifiedServiceManager.on_trader_settings_update(data)
