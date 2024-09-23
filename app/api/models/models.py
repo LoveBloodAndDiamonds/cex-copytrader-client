@@ -44,12 +44,12 @@ class UserSettings(BaseModel):
     balance_threshold: float
 
     ''' Множитель к размеру ордеров '''
-    multuplier: float
+    multiplier: float
 
     def __str__(self) -> str:
         return (f"UserSettings(status={self.status}, balance_threshold={self.balance_threshold},"
-                f" multuplier={self.multuplier})")
+                f" multiplier={self.multiplier})")
 
     def __repr__(self) -> str:
         return (f"<UserSettings(status={self.status}, balance_threshold={self.balance_threshold},"
-                f" multuplier={self.multuplier})>")
+                f" multiplier={self.multiplier})>")

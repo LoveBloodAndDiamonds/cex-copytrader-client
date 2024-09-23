@@ -36,5 +36,5 @@ class UserSettings(BaseModel):
     balance_threshold: float
 
     ''' Множитель к размеру ордеров '''
-    multuplier: float
+    multiplier: float
 
