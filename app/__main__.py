@@ -14,6 +14,8 @@ app = FastAPI()
 def startup() -> None:
     """ Startup function """
     logger.info("Application startup!")
+    logger.info(f"Uvicorn running at http://{config.SERVER_HOST}:{config.SERVER_HOST}")
+    logger.info(f"Admin panel running at http://{config.SERVER_HOST}:{config.SERVER_HOST}/admin")
 
     # Create keys model if not exists
     Database.keys_repo.create_if_not_exists()
@@ -37,7 +39,7 @@ def shutdown() -> None:
 try:
     startup()
 
-    uvicorn.run(app, host=config.SERVER_HOST, port=config.SERVER_PORT, log_level="info")
+    uvicorn.run(app, host=config.SERVER_HOST, port=config.SERVER_PORT, log_level="error")
 except Exception as e:
     logger.exception(f"Unexcepted exception at top level: {e}")
 finally:
