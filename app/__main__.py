@@ -14,8 +14,8 @@ app = FastAPI()
 def startup() -> None:
     """ Startup function """
     logger.info("Application startup!")
-    logger.info(f"Uvicorn running at http://{config.SERVER_HOST}:{config.SERVER_HOST}")
-    logger.info(f"Admin panel running at http://{config.SERVER_HOST}:{config.SERVER_HOST}/admin")
+    logger.info(f"Uvicorn running at http://{config.SERVER_HOST}:{config.SERVER_PORT}")
+    logger.info(f"Admin panel running at http://{config.SERVER_HOST}:{config.SERVER_PORT}/admin")
 
     # Create keys model if not exists
     Database.keys_repo.create_if_not_exists()
