@@ -16,3 +16,11 @@ class Keys(Base):
     api_key: Mapped[str] = mapped_column(nullable=True, unique=True)
 
     api_secret: Mapped[str] = mapped_column(nullable=True, unique=True)
+
+    def __str__(self) -> str:
+        return (f"KeysORM(id={self.id}, exchange={self.exchange}, api_key={'*' * len(self.api_key)}, "
+                f"api_secret={'*' * len(self.api_secret)})")
+
+    def __repr__(self) -> str:
+        return (f"<KeysORM(id={self.id}, exchange={self.exchange}, api_key={'*' * len(self.api_key)}, "
+                f"api_secret={'*' * len(self.api_secret)})>")
