@@ -1,0 +1,21 @@
+from fastapi import APIRouter, Response
+from starlette.requests import Request
+
+from app.configuration import logger, config
+from app.managers import UnifiedServiceManager
+from ..models import TraderSettings
+
+router = APIRouter()
+
+
+@router.post("/trader_settings")
+def handle_trader_settings_update(request: Request, data: TraderSettings) -> Response:
+    """
+    Функция принимает запрос с информацией о трейдере.
+    """
+    # Проверка на то что запрос пришел с master сервера
+    if request.client.host != config.MASTER_SERVER_HOST:
+        logger.warning(f"Trader settings event from unknown host: {request.client.host}:{request.client.port}")
+        return Response(status_code=403)
+
+    UnifiedServiceManager.on_trader_settings_update(data)
