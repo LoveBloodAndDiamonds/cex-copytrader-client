@@ -24,12 +24,12 @@ class TraderSettings(BaseModel):
     exchange: Exchange
 
     def __str__(self) -> str:
-        return (f"TraderSettings(status={self.status}, api_key={'*' * len(self.api_key)},"
-                f" api_secret={'*' * len(self.api_secret)}, exchange={self.exchange})")
+        return (f"TraderSettings(status={self.status}, api_key_len={len(self.api_key or '')},"
+                f" api_secret_len={len(self.api_secret or '')}, exchange={self.exchange})")
 
     def __repr__(self) -> str:
-        return (f"<TraderSettings (status={self.status}, api_key={'*' * len(self.api_key)},"
-                f" api_secret={'*' * len(self.api_secret)}, exchange={self.exchange})>")
+        return (f"<TraderSettings (status={self.status}, api_key_len={len(self.api_key or '')},"
+                f" api_secret_len={len(self.api_secret or '')}, exchange={self.exchange})>")
 
 
 class UserSettings(BaseModel):

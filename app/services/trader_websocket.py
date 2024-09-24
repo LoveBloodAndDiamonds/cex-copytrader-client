@@ -20,6 +20,7 @@ class TraderWebsocketService(Thread):
         self._trader_settings: TraderSettings = trader_settings
 
     def run(self) -> None:
+        # then connector is none - we need to stop trading also
         pass
 
     def stop_trade_event(self) -> None:
@@ -35,3 +36,4 @@ class TraderWebsocketService(Thread):
     def on_trader_settings_update(self, u: TraderSettings) -> None:
         logger.warning("trader settings update event")
         # make something about status
+
