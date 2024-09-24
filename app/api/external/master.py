@@ -5,7 +5,7 @@ from starlette.requests import Request
 
 from app.configuration import logger, config
 from app.manager import ServiceManager
-from app.schemas import TraderSettings, UserSettings
+from app.schemas.models import TraderSettings, UserSettings
 
 router = APIRouter()
 

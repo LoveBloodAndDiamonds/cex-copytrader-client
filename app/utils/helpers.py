@@ -2,7 +2,6 @@ import requests
 
 from app.schemas.types import M
 from app.schemas.exceptions import MasterServerConnectionError
-from app.schemas.models import UserBalanceUpdate
 from app.configuration import config
 
 

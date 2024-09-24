@@ -27,7 +27,7 @@ def startup() -> None:
     register_admin_routes(app)
 
     # Run some background tasks
-    ServiceManager.run_tasks()
+    ServiceManager.run_services()
 
 
 def shutdown() -> None:
