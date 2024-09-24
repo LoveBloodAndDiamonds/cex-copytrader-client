@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.schemas.enums import Exchange
 from .base import Base
-from ..schemas import Exchange
 
 
 class Keys(Base):
@@ -24,3 +24,6 @@ class Keys(Base):
     def __repr__(self) -> str:
         return (f"<KeysORM(id={self.id}, exchange={self.exchange}, api_key={'*' * len(self.api_key)}, "
                 f"api_secret={'*' * len(self.api_secret)})>")
+
+    def is_fully_filled(self) -> bool:
+        return all([self.api_key, self.api_secret, self.exchange])

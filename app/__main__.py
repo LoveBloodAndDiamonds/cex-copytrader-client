@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 import uvicorn
 
-from .api.external import user_router, trader_router
+from .api.external import master_server_router
 from .api.internal import register_admin_routes
-from .managers import UnifiedServiceManager
+from .manager import ServiceManager
 from .configuration import logger, config
 from .database import Database
 
@@ -21,14 +21,13 @@ def startup() -> None:
     Database.keys_repo.create_if_not_exists()
 
     # Register external routers
-    app.include_router(user_router)
-    app.include_router(trader_router)
+    app.include_router(master_server_router)
 
     # Register internal routes
     register_admin_routes(app)
 
     # Run some background tasks
-    UnifiedServiceManager.run_tasks()
+    ServiceManager.run_tasks()
 
 
 def shutdown() -> None:

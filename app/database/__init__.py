@@ -1,6 +1,5 @@
 __all__ = [
     "Database",
-    "Exchange",
     "KeysRepository",
     "Keys",
 ]
@@ -8,4 +7,3 @@ __all__ = [
 from .database import Database
 from .models import *
 from .repositories import *
-from .schemas import *

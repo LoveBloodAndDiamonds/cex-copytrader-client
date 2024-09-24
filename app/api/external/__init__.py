@@ -1,4 +1,3 @@
-__all__ = ["trader_router", "user_router", ]
+__all__ = ["master_server_router", ]
 
-from .trader import router as trader_router
-from .user import router as user_router
+from .master import router as master_server_router

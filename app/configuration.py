@@ -27,6 +27,8 @@ class Configuration:
     """
     All in one configuration dataclass.
     """
+    VERSION: float = 1.00
+
     # std logs level
     STD_LOGGER_LEVEL: Literal["DEBUG", "INFO", "ERROR"] | int = "INFO"
 
@@ -62,6 +64,12 @@ class Configuration:
 
     # databaste path
     DATABASE_URL: str = getenv("DATABASE_URL", "sqlite:///database.db")
+
+    # interval to update balance
+    BALANCE_UPDATE_INTERVAL: int | float = 1
+
+    # interval to notify master-server about current balance
+    BALANCE_NOTIFY_INTERVAL: int | float = 10
 
     def __post_init__(self) -> None:
         assert self.MASTER_SERVER_HOST, "Master server host and port are required!"

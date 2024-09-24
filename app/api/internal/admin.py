@@ -11,7 +11,7 @@ from starlette.responses import HTMLResponse
 
 from app.configuration import config
 from app.database import Database, Keys
-from app.managers import UnifiedServiceManager
+from app.manager import ServiceManager
 
 
 class AdminAuth(AuthenticationBackend):
@@ -54,7 +54,7 @@ class KeysAdmin(ModelView, model=Keys):
     column_list = [Keys.exchange, Keys.api_key]
 
     async def after_model_change(self, data: dict, model: Keys, is_created: bool, request: Request) -> None:
-        UnifiedServiceManager.on_api_keys_update(u=model)
+        ServiceManager.on_api_keys_update(u=model)
 
 
 class LogsView(BaseView):
