@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from app.database import Exchange
+from .enums import Exchange
 
 
 class UserBalanceUpdate(BaseModel):
