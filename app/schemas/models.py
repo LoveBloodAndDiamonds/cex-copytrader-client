@@ -6,7 +6,7 @@ from .enums import Exchange
 class UserBalanceUpdate(BaseModel):
     """ Модель запроса обновления баланса от пользователя """
     ''' Значение баланса '''
-    balance: int
+    balance: float
 
 
 class TraderSettings(BaseModel):

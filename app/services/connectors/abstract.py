@@ -13,4 +13,10 @@ class AbstractExchangeConnector(ABC):
 
     @abstractmethod
     def get_current_balance(self) -> float:
+        """ Returns current client balance """
+        raise NotImplementedError
+
+    @abstractmethod
+    def on_stop_trading_event(self) -> None:
+        """ Cancels all open orders and close all opened positions """
         raise NotImplementedError

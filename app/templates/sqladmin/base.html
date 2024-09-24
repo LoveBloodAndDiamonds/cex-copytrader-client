@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/tabler.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/fontawesome.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/select2.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/flatpickr.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/main.css') }}">
+  <style>
+    :root {
+      --tblr-body-bg: grey;
+      --tblr-bg-surface: darkgrey;
+      --tblr-bg-surface-tertiary: darkgrey;
+      --tblr-light: #D8D8D8;
+      --tblr-light-rgb: darkgrey;
+      --tblr-border-color: black;
+    }
+    .navbar-dark {
+      --tblr-navbar-border-color: #243049;
+      --tblr-navbar-bg: #1d273b;
+      --tblr-scrollbar-color: var(--tblr-white-rgb);
+      --tblr-navbar-active-bg: rgba(255, 255, 255, 0.06);
+      --tblr-navbar-bg: #484848;
+      color: rgba(255, 255, 255, .7);
+    }
+    .form-check-input {
+      --tblr-form-check-bg: var(--tblr-bg-forms);
+      width: 1rem;
+      height: 1rem;
+      margin-top: .2142857143rem;
+      vertical-align: top;
+      background-color: #D8D8D8;
+      background-image: var(--tblr-form-check-bg-image);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      border: var(--tblr-border-width) var(--tblr-border-style) var(--tblr-border-color-translucent);
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      -webkit-print-color-adjust: exact;
+      color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  </style>
+  {% block head %}
+  {% endblock %}
+  <title>{{ admin.title }}</title>
+</head>
+<body>
+  {% block body %}
+  <main>
+    {% block main %}
+    {% endblock %}
+  </main>
+  {% endblock %}
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/jquery.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/tabler.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/popper.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/bootstrap.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/select2.full.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/flatpickr.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('admin:statics', path='js/main.js') }}"></script>
+  {% block tail %}
+  {% endblock %}
+</body>
+
+</html>

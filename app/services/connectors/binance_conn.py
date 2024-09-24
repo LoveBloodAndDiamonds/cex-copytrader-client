@@ -15,3 +15,6 @@ class BinanceConnector(AbstractExchangeConnector):
         for asset in self._client.futures_account_balance():
             if asset["asset"] == "USDT":
                 return float(asset["availableBalance"])
+
+    def on_stop_trading_event(self) -> None:
+        pass

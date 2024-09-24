@@ -30,7 +30,7 @@ class Configuration:
     VERSION: float = 1.00
 
     # std logs level
-    STD_LOGGER_LEVEL: Literal["DEBUG", "INFO", "ERROR"] | int = "INFO"
+    STD_LOGGER_LEVEL: Literal["DEBUG", "INFO", "ERROR"] | int = "DEBUG"
 
     # files logs level
     FILE_LOGGER_LEVEL: Literal["DEBUG", "INFO", "ERROR"] | int = "DEBUG"

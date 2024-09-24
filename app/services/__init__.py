@@ -1,2 +1,4 @@
+from .balance_notifyer import BalanceNotifyerService
 from .balance_updater import BalanceUpdaterService
+from .balance_warden import BalanceWardenService
 from .trader_websocket import TraderWebsocketService
