@@ -27,18 +27,26 @@ class BalanceUpdaterService(Thread):
 
     def run(self) -> None:
         """ Точка запуска сервиса. """
+        debug_log_sent: bool = False
         while True:
             try:
                 connector: AbstractExchangeConnector | None = self._connector_factory()
                 if connector:
-                    balance: float = connector.get_current_balance()
-                    for callback in self._callbacks:
-                        try:
-                            callback(balance)
-                        except Exception as e:
-                            logger.error(f"Error while called callback({callback.__name__}): {e}")
+                    debug_log_sent: bool = False
+                    try:
+                        balance: float = connector.get_current_balance()
+                    except Exception as e:
+                        logger.error(f"Error while gettings balance: {e}")
+                    else:
+                        for callback in self._callbacks:
+                            try:
+                                callback(balance)
+                            except Exception as e:
+                                logger.error(f"Error while called callback({callback.__name__}): {e}")
                 else:
-                    logger.debug("Can't send balance, becouse connector are not inited")
+                    if not debug_log_sent:
+                        logger.debug("Can't send balance, becouse connector are not inited")
+                        debug_log_sent: bool = True
             except Exception as e:
                 logger.error(f"Error while update balance: {e}")
             finally:
