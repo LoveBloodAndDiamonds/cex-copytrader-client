@@ -45,12 +45,11 @@ class ServiceManager:
         )
         cls._balance_warden_service = BalanceWardenService(
             balance_threshold=user_settings.balance_threshold,
-            start_trade_callback=cls._trader_websocket_service.start_trade_event,
-            stop_trade_callback=cls._trader_websocket_service.stop_trade_event
+            balance_status_callback=cls._trader_websocket_service.on_balance_status_update
         )
         cls._balance_updater_service = BalanceUpdaterService(
             connector_factory=cls._connector_factory,
-            callbacks=[
+            balance_changed_callbacks=[
                 cls._balance_notifyer_service.balance_update_event,
                 cls._balance_warden_service.balance_update_event
             ]

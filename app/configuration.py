@@ -69,7 +69,7 @@ class Configuration:
     BALANCE_UPDATE_INTERVAL: int | float = 1
 
     # interval to notify master-server about current balance
-    BALANCE_NOTIFY_INTERVAL: int | float = 10
+    BALANCE_NOTIFY_INTERVAL: int | float = 60
 
     def __post_init__(self) -> None:
         assert self.MASTER_SERVER_HOST, "Master server host and port are required!"

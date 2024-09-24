@@ -11,17 +11,17 @@ class BalanceUpdaterService(Thread):
     def __init__(
             self,
             connector_factory: Callable[[], Optional[AbstractExchangeConnector]],
-            callbacks: list[Callable[[float], None]],
+            balance_changed_callbacks: list[Callable[[float], None]],
             interval: int | float = config.BALANCE_UPDATE_INTERVAL
     ) -> None:
         """
         :param connector_factory: Фабрика коннектора с биржей.
-        :param callbacks: Куда передавать баланс при обновлении.
+        :param balance_changed_callbacks: Куда передавать баланс при обновлении.
         """
         super().__init__(daemon=True)
 
         self._connector_factory: Callable[[], Optional[AbstractExchangeConnector]] = connector_factory
-        self._callbacks: list[callable] = callbacks
+        self._balance_changed_callbacks: list[callable] = balance_changed_callbacks
 
         self._interval: int | float = interval
 
@@ -38,7 +38,7 @@ class BalanceUpdaterService(Thread):
                     except Exception as e:
                         logger.error(f"Error while gettings balance: {e}")
                     else:
-                        for callback in self._callbacks:
+                        for callback in self._balance_changed_callbacks:
                             try:
                                 callback(balance)
                             except Exception as e:

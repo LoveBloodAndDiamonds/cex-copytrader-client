@@ -1,3 +1,5 @@
+from typing import Callable
+
 from ..configuration import logger
 from ..schemas.models import UserSettings
 from ..schemas.enums import BalanceStatus
@@ -11,17 +13,13 @@ class BalanceWardenService:
     def __init__(
             self,
             balance_threshold: float,
-            start_trade_callback: callable,
-            stop_trade_callback: callable,
+            balance_status_callback: Callable[[BalanceStatus], None],
     ) -> None:
         """
         :param balance_threshold: Настройки пользователя
-        :param start_trade_callback:
-        :param stop_trade_callback:
         """
         self._balance_threshold: float = balance_threshold
-        self._start_trade_callback: callable = start_trade_callback
-        self._stop_trade_callback: callable = stop_trade_callback
+        self._balance_status_callback: Callable[[BalanceStatus], None] = balance_status_callback
 
         # Используется чтобы не вызывать функции много раз попусту
         self._balance_status: BalanceStatus = BalanceStatus.NOT_DEFINED
@@ -32,11 +30,11 @@ class BalanceWardenService:
             if balance < self._balance_threshold and self._balance_status != BalanceStatus.CANT_TRADE:
                 logger.critical(f"Current balance({balance}) lower than balance threshold({self._balance_threshold})!")
                 self._balance_status: BalanceStatus = BalanceStatus.CANT_TRADE
-                self._stop_trade_callback()
+                self._balance_status_callback(self._balance_status)
             elif balance > self._balance_threshold and self._balance_status != BalanceStatus.CAN_TRADE:
                 logger.success(f"Current balance({balance}) greater than balance threshold({self._balance_threshold})!")
                 self._balance_status: BalanceStatus = BalanceStatus.CAN_TRADE
-                self._start_trade_callback()
+                self._balance_status_callback(self._balance_status)
         except Exception as e:
             logger.error(f"Error while warden client balance: {e}")
 
