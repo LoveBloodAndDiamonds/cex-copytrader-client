@@ -31,6 +31,9 @@ class TraderSettings(BaseModel):
         return (f"<TraderSettings (status={self.status}, api_key_len={len(self.api_key or '')},"
                 f" api_secret_len={len(self.api_secret or '')}, exchange={self.exchange})>")
 
+    def is_fully_filled(self) -> bool:
+        return all([self.api_key, self.api_secret, self.exchange])
+
 
 class UserSettings(BaseModel):
     """

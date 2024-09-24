@@ -18,3 +18,10 @@ def request_model(endpoint: str, model: M) -> type[M]:
     if response.status_code == 200:
         return model(**response.json())
     raise MasterServerConnectionError(status_code=response.status_code, response_text=response.text)
+
+
+def find_unique_positions(positions_1: list[dict], positions_2: list[dict]):
+    list1_dict = {(item['symbol'], item['positionSide'], int(item['positionAmt'] > 0)): item for item in positions_1}
+    list2_dict = {(item['symbol'], item['positionSide'], int(item['positionAmt'] > 0)): item for item in positions_2}
+
+    return [item for item in list1_dict if item not in list2_dict]

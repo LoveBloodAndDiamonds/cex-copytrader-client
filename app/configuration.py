@@ -71,6 +71,9 @@ class Configuration:
     # interval to notify master-server about current balance
     BALANCE_NOTIFY_INTERVAL: int | float = 60
 
+    # interval to fetch orders and positions from trader and user accounts
+    TRADER_POLLING_INTERVAL: int | float = 10
+
     def __post_init__(self) -> None:
         assert self.MASTER_SERVER_HOST, "Master server host and port are required!"
 

@@ -3,16 +3,17 @@ from typing import Optional
 from ..configuration import logger
 from ..database import Keys, Database
 from ..schemas.models import UserSettings, TraderSettings
-from ..services import TraderWebsocketService, BalanceUpdaterService, BalanceNotifyerService, BalanceWardenService
-from ..services.connectors import AbstractExchangeConnector, EXCHANGE_TO_CONNECTOR
 from ..utils import request_model
+from ..services import *
 
 
 class ServiceManager:
     _running: bool = False
     _connector: Optional[AbstractExchangeConnector] = None
+    _trader_connector: Optional[AbstractExchangeConnector] = None
 
     _trader_websocket_service: TraderWebsocketService
+    _trader_polling_service: TraderPollingService
     _balance_updater_service: BalanceUpdaterService
     _balance_warden_service: BalanceWardenService
     _balance_notifyer_service: BalanceNotifyerService
@@ -38,14 +39,24 @@ class ServiceManager:
 
         # Иницаилизируем и связываем сервисы
         cls._balance_notifyer_service = BalanceNotifyerService()
+        cls._trader_polling_service = TraderPollingService(
+            connector_factory=cls._connector_factory,
+            trader_connector_factory=cls._trader_connector_factory,
+            user_settings=user_settings,
+            trader_settings=trader_settings
+        )
         cls._trader_websocket_service = TraderWebsocketService(
             connector_factory=cls._connector_factory,
             user_settings=user_settings,
             trader_settings=trader_settings
         )
         cls._balance_warden_service = BalanceWardenService(
+            connector_factory=cls._connector_factory,
             balance_threshold=user_settings.balance_threshold,
-            balance_status_callback=cls._trader_websocket_service.on_balance_status_update
+            balance_status_callbacks=[
+                cls._trader_websocket_service.on_balance_status_update,
+                cls._trader_polling_service.on_balance_status_update
+            ]
         )
         cls._balance_updater_service = BalanceUpdaterService(
             connector_factory=cls._connector_factory,
@@ -57,16 +68,19 @@ class ServiceManager:
 
         # Запускаем сервисы
         cls._balance_updater_service.start()
+        cls._trader_polling_service.start()
         cls._trader_websocket_service.start()
 
     @classmethod
     def on_user_settings_update(cls, u: UserSettings) -> None:
         logger.info(f"User settings update: {u}")
-        cls._balance_warden_service.update_user_settings(u)
+        cls._balance_warden_service.on_user_settings_update(u)
+        cls._trader_websocket_service.on_user_settings_update(u)
 
     @classmethod
     def on_trader_settings_update(cls, u: TraderSettings) -> None:
         logger.info(f"Trader settings update: {u}")
+        cls._trader_websocket_service.on_trader_settings_update(u)
 
     @classmethod
     def on_api_keys_update(cls, u: Keys) -> None:
@@ -97,3 +111,28 @@ class ServiceManager:
         :return:
         """
         return cls._connector
+
+    @classmethod
+    def _init_trader_connector(cls, trader_settings: TraderSettings) -> None:
+        """ Функция обновляет коннектор трейдера. """
+        try:
+            if trader_settings.is_fully_filled():
+                cls._connector = EXCHANGE_TO_CONNECTOR[trader_settings.exchange](
+                    api_key=trader_settings.api_key,
+                    api_secret=trader_settings.api_secret)
+                logger.debug(f"Trader connector updated")
+            else:
+                cls._connector = None
+                logger.info(f"Trader settings model is not fully filled, can't init trader connector")
+        except Exception as e:
+            cls._connector = None
+            logger.error(f"Error while init trader connector: {e}")
+
+    @classmethod
+    def _trader_connector_factory(cls) -> AbstractExchangeConnector:
+        """
+        Функция передается как фабрика коннектора, при обновлении коннектора, нужно будет единожды обновлять его тут,
+        и он автоматически должен подтягиваться в другие классы.
+        :return:
+        """
+        return cls._trader_connector
