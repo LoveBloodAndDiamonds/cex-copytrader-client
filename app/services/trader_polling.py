@@ -48,31 +48,33 @@ class TraderPollingService(Thread):
                 time.sleep(self._interval)
 
     def _check_statuses(self) -> bool:
+        """ Функция проверяет все статусы и переменные, перед тем как дать разрешение на продолжение работы. """
+        result: bool = True
         if not self._connector_factory("client"):
             logger.debug("Can not proceed polling becouse client connector factory")
-            return False
+            result = False
         if not self._connector_factory("trader"):
             logger.debug("Can not proceed polling becouse trader connector factory")
-            return False
+            result = False
         if not self._user_settings.status:
             logger.debug("Can not proceed polling becouse _user_settings.status")
-            return False
+            result = False
         if not self._trader_settings.status:
             logger.debug("Can not proceed polling becouse _trader_settings.status")
-            return False
+            result = False
         if self._balance_status != BalanceStatus.CAN_TRADE:
             logger.debug("Can not proceed polling becouse _balance_status")
-            return False
-        return True
+            result = False
+        return result
 
     def on_balance_status_update(self, balance_status: BalanceStatus):
-        logger.warning(f"Balance status update: {balance_status}")
+        logger.info(f"Balance status update: {balance_status}")
         self._balance_status = balance_status
 
     def on_user_settings_update(self, u: UserSettings) -> None:
-        logger.warning(f"User settings update event: {u}")
+        logger.info(f"User settings update event: {u}")
         self._user_settings: UserSettings = u
 
     def on_trader_settings_update(self, u: TraderSettings) -> None:
-        logger.warning(f"Trader settings update event: {u}")
+        logger.info(f"Trader settings update event: {u}")
         self._trader_settings: TraderSettings = u

@@ -34,6 +34,16 @@ class AbstractExchangeConnector(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def copy_order_from_websocket_message(self, order: dict) -> dict:
+        """ Copy order from trader websocket account message """
+        raise NotImplementedError
+
+    @abstractmethod
+    def close_position_from_websocket_message(self, position: dict) -> dict:
+        """ Closing position after websocket message """
+        raise NotImplementedError
+
+    @abstractmethod
     def close_position(self, position: Position) -> dict:
         """ Close current positions """
         raise NotImplementedError
@@ -44,9 +54,15 @@ class AbstractExchangeConnector(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def cancel_order_by_client_order_id(self, symbol: str, client_order_id: str) -> dict:
+        """ Cancel order by client order id """
+        raise NotImplementedError
+
+    @abstractmethod
     def cancel_all_open_orders(self, symbol: str) -> dict:
         """ Cancel all opened orders """
         raise NotImplementedError
+
 
     # @abstractmethod
     # def open_position(self, position: Position) -> None:

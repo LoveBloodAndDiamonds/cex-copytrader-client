@@ -82,3 +82,4 @@ Order: TypeAlias = dict
 #       "selfTradePreventionMode": "NONE", //self trading preventation mode
 #       "goodTillDate": 0                  //order pre-set auot cancel time for TIF GTD order
 # }
+

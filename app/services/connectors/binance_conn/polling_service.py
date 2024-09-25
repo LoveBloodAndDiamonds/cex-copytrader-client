@@ -20,7 +20,6 @@ class BinancePollingService(AbstractPollingService):
             user_settings: UserSettings,
     ) -> None:
         """ Проверка ордеров и позиций, выставление их и тд """
-        # logger.info(f"----------------------------------------------------")
 
         client_connector: AbstractExchangeConnector = connector_factory("client")
         trader_connector: AbstractExchangeConnector = connector_factory("trader")
@@ -48,14 +47,14 @@ class BinancePollingService(AbstractPollingService):
             client_orders=client_orders,
             trader_orders=trader_orders)
 
-        # if client_unique_positions:
-        #     logger.debug(f"{client_unique_positions=}")
-        # if trader_unique_positions:
-        #     logger.debug(f"{trader_unique_positions=}")
-        # if client_unique_orders:
-        #     logger.debug(f"{client_unique_orders=}")
-        # if trader_unique_orders:
-        #     logger.debug(f"{trader_unique_orders=}")
+        if client_unique_positions:
+            logger.debug(f"{client_unique_positions=}")
+        if trader_unique_positions:
+            logger.debug(f"{trader_unique_positions=}")
+        if client_unique_orders:
+            logger.debug(f"{client_unique_orders=}")
+        if trader_unique_orders:
+            logger.debug(f"{trader_unique_orders=}")
 
         # close client unique orders and positions
         cls._close_client_unique_positions(
@@ -103,7 +102,7 @@ class BinancePollingService(AbstractPollingService):
                     o["origQty"] = float(o["origQty"]) * user_settings.multiplier
                     logger.debug(f"Both accounts in positions, place order: {o}")
                     result: dict = client_connector.copy_order(order=o)
-                    logger.info(f"Order {o} copied: {result}")
+                    logger.info(f"Order copied: {result}")
                     continue
 
                 # Позиция есть у трейдера, но нет у клиента
@@ -116,7 +115,7 @@ class BinancePollingService(AbstractPollingService):
                     o["origQty"] = float(o["origQty"]) * user_settings.multiplier
                     logger.debug(f"Both accounts not in positions, place order: {o}")
                     result: dict = client_connector.copy_order(order=o)
-                    logger.info(f"Order {o} copied: {result}")
+                    logger.info(f"Order copied: {result}")
                     continue
 
             except Exception as e:
@@ -133,7 +132,7 @@ class BinancePollingService(AbstractPollingService):
             try:
                 logger.debug(f"Close unique client position: {p}")
                 result: dict = client_connector.close_position(position=p)
-                logger.info(f"Position {p} closed: {result}")
+                logger.info(f"Unique position closed: {result}")
             except Exception as e:
                 logger.error(f"Error while closing client unique position({p}): {e}")
 
@@ -148,7 +147,7 @@ class BinancePollingService(AbstractPollingService):
             try:
                 logger.debug(f"Close unique client order: {o}")
                 result: dict = client_connector.cancel_order(symbol=o["symbol"], order_id=o["orderId"])
-                logger.info(f"Order {o} canceled: {result}")
+                logger.info(f"Unique order canceled: {result}")
             except Exception as e:
                 logger.error(f"Error while canceling client unique order({o}): {e}")
 
