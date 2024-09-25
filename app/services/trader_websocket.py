@@ -6,6 +6,12 @@ from ..configuration import logger
 from ..schemas.enums import BalanceStatus
 from ..schemas.models import UserSettings, TraderSettings
 
+"""
+ОТКРЫВАТЬ ТОЛЬКО ТЕ ПОЗИЦИИ, КОТОРЫЕ БЫЛИ ОТКРЫТЫ С НУЛЯ.
+
+ТАК ЖЕ ПРОВЕРЯТЬ ПОЛНОЕ ЗАКРЫТИЕ ПОЗИЦИЙ.
+"""
+
 
 class TraderWebsocketService(Thread):
     """
@@ -28,16 +34,6 @@ class TraderWebsocketService(Thread):
     def run(self) -> None:
         # then connector is none - we need to stop trading also
         pass
-
-    def _websocket_callback_handler(self, msg: dict) -> None:
-        if not self._connector_factory:
-            pass
-        if not self._user_settings.status:
-            pass
-        if not self._trader_settings.status:
-            pass
-        if self._balance_status != BalanceStatus.CAN_TRADE:
-            pass
 
     def on_balance_status_update(self, balance_status: BalanceStatus):
         logger.warning(f"Balance status update: {balance_status}")

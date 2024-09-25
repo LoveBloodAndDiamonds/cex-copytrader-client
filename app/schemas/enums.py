@@ -11,4 +11,3 @@ class BalanceStatus(Enum):
     CAN_TRADE: str = "CAN_TRADE"
     CANT_TRADE: str = "CANT_TRADE"
     NOT_DEFINED: str = "NOT_DEFINED"
-    

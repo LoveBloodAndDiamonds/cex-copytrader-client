@@ -34,8 +34,9 @@ class ServiceManager:
         trader_settings: TraderSettings = request_model("trader_settings", TraderSettings)
         logger.debug(f"Got trader settings from master-server: {trader_settings}")
 
-        # Инициализируем коннектор
-        cls._init_connector(keys)
+        # Инициализируем коннекторы
+        cls._init_client_connector(keys)
+        cls._init_trader_connector(trader_settings)
 
         # Иницаилизируем и связываем сервисы
         cls._balance_notifyer_service = BalanceNotifyerService()
@@ -81,20 +82,22 @@ class ServiceManager:
     def on_trader_settings_update(cls, u: TraderSettings) -> None:
         logger.info(f"Trader settings update: {u}")
         cls._trader_websocket_service.on_trader_settings_update(u)
+        cls._init_trader_connector(u)
 
     @classmethod
     def on_api_keys_update(cls, u: Keys) -> None:
         logger.info(f"Api keys update: {u}")
-        cls._init_connector(u)
+        cls._init_client_connector(u)
 
     @classmethod
-    def _init_connector(cls, keys: Keys) -> None:
+    def _init_client_connector(cls, keys: Keys) -> None:
         """ Функция обновляет коннектор. """
         try:
             if keys.is_fully_filled():
                 cls._connector = EXCHANGE_TO_CONNECTOR[keys.exchange](
                     api_key=keys.api_key,
-                    api_secret=keys.api_secret)
+                    api_secret=keys.api_secret,
+                )
                 logger.debug(f"Connector updated")
             else:
                 cls._connector = None
@@ -117,15 +120,16 @@ class ServiceManager:
         """ Функция обновляет коннектор трейдера. """
         try:
             if trader_settings.is_fully_filled():
-                cls._connector = EXCHANGE_TO_CONNECTOR[trader_settings.exchange](
+                cls._trader_connector = EXCHANGE_TO_CONNECTOR[trader_settings.exchange](
                     api_key=trader_settings.api_key,
-                    api_secret=trader_settings.api_secret)
+                    api_secret=trader_settings.api_secret,
+                )
                 logger.debug(f"Trader connector updated")
             else:
-                cls._connector = None
+                cls._trader_connector = None
                 logger.info(f"Trader settings model is not fully filled, can't init trader connector")
         except Exception as e:
-            cls._connector = None
+            cls._trader_connector = None
             logger.error(f"Error while init trader connector: {e}")
 
     @classmethod

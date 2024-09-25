@@ -49,9 +49,11 @@ class BalanceWardenService:
 
     def _stop_trade_event(self) -> None:
         # Close all orders and positions
+        logger.warning("Stop trading event called!")
         connector: AbstractExchangeConnector | None = self._connector_factory()
         if connector:
-            connector.on_stop_trading_event()
+            connector.cancel_all_open_orders()
+            connector.close_all_open_positions()
         else:
             logger.critical("Can not get connector to call stop trading event.")
 

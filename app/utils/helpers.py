@@ -1,7 +1,8 @@
 import requests
 
-from app.schemas.types import M
+from app.schemas.types import M, Position, Order
 from app.schemas.exceptions import MasterServerConnectionError
+from app.schemas.enums import Exchange
 from app.configuration import config
 
 
@@ -20,8 +21,36 @@ def request_model(endpoint: str, model: M) -> type[M]:
     raise MasterServerConnectionError(status_code=response.status_code, response_text=response.text)
 
 
-def find_unique_positions(positions_1: list[dict], positions_2: list[dict]):
-    list1_dict = {(item['symbol'], item['positionSide'], int(item['positionAmt'] > 0)): item for item in positions_1}
-    list2_dict = {(item['symbol'], item['positionSide'], int(item['positionAmt'] > 0)): item for item in positions_2}
+def find_unique_positions(list1: list[Position], list2: list[Position], exchange: Exchange) -> list[Position]:
+    if exchange == Exchange.BINANCE:
+        # Создаем множество для хранения уникальных позиций из списка 2
+        set2 = {(pos['symbol'], pos['positionSide']) for pos in list2}
 
-    return [item for item in list1_dict if item not in list2_dict]
+        # Выбираем те элементы из list1, которые отсутствуют в set2
+        unique_positions = [pos for pos in list1 if (pos['symbol'], pos['positionSide']) not in set2]
+
+        return unique_positions
+
+
+def find_trader_unique_orders(trader_orders: list[Order], client_orders: list[Order]) -> list[Order]:
+    client_order_ids: list[str] = [o["clientOrderId"] for o in client_orders]
+    # trader_order_ids: list[str] = [o["orderId"] for o in trader_orders]
+
+    unique_orders: list[Order] = []
+    for o in trader_orders:
+        if str(o["orderId"]) not in client_order_ids:
+            unique_orders.append(o)
+
+    return unique_orders
+
+
+def find_client_unique_orders(client_orders: list[Order], trader_orders: list[Order]) -> list[Order]:
+    # client_order_ids: list[str] = [o["clientOrderId"] for o in client_orders]
+    trader_order_ids: list[str] = [str(o["orderId"]) for o in trader_orders]
+
+    unique_orders: list[Order] = []
+    for o in client_orders:
+        if o["clientOrderId"] not in trader_order_ids:
+            unique_orders.append(o)
+
+    return unique_orders

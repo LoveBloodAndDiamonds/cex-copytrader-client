@@ -84,13 +84,14 @@ config = Configuration()
 logger.remove()
 for level in ["ERROR", "INFO", "DEBUG"]:
     logger.add(f'{config.paths.LOGS_FOLDER_PATH}/{level.lower()}.log', level=level,
-               format="<white>{time: %d.%m %H:%M:%S.%f}</white> | "
+               format="<white>{time: %d.%m %H:%M:%S.%f}</white>| "
                       "<level>{level}</level>| "
-                      "|{name} {function} line:{line}| "
+                      "{name} {function} line:{line}| "
                       "<bold>{message}</bold>",
                rotation="5 MB",
                compression='zip')
 logger.add(sys.stderr, level=config.STD_LOGGER_LEVEL,
            format="<white>{time: %d.%m %H:%M:%S}</white>|"
                   "<level>{level}</level>|"
-                  "<bold>{message}</bold>")
+                  "{name} {function} {line}|"
+                  " <bold>{message}</bold>")

@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
-from app.schemas.enums import Exchange
-from .adapters import EXCHANGE_TO_ADAPTER, AbstractAdapter
+from app.schemas.types import Order, Position
 
 
 class AbstractExchangeConnector(ABC):
@@ -10,17 +9,9 @@ class AbstractExchangeConnector(ABC):
             self,
             api_key: str,
             api_secret: str,
-            exchange: Exchange
     ) -> None:
         self._api_key: str = api_key
         self._api_secret: str = api_secret
-        self._adapter: type[AbstractAdapter] = EXCHANGE_TO_ADAPTER[exchange]
-
-    def get_all_open_positions_adapted(self) -> list:
-        return self._adapter.adapt_positions_list(self.get_all_open_positions())
-
-    def get_all_open_orders_adapted(self) -> list:
-        return self._adapter.adapt_orders_list(self.get_all_open_orders())
 
     @abstractmethod
     def get_current_balance(self) -> float:
@@ -38,21 +29,36 @@ class AbstractExchangeConnector(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def create_order(self, **params) -> None:
-        """ Create order """
+    def copy_order(self, order: Order) -> dict:
+        """ Copy order from trader account """
         raise NotImplementedError
 
     @abstractmethod
-    def cancel_order(self, order_id: int | str) -> None:
+    def close_position(self, position: Position) -> dict:
+        """ Close current positions """
+        raise NotImplementedError
+
+    @abstractmethod
+    def cancel_order(self, symbol: str, order_id: int | str) -> dict:
         """ Cancel order by id """
         raise NotImplementedError
 
     @abstractmethod
-    def cancel_all_open_orders(self) -> None:
+    def cancel_all_open_orders(self) -> dict:
         """ Cancel all opened orders """
         raise NotImplementedError
 
     @abstractmethod
-    def close_all_open_positions(self) -> None:
+    def close_all_open_positions(self) -> dict:
         """ Cancel all opened positions """
         raise NotImplementedError
+
+    # @abstractmethod
+    # def open_position(self, position: Position) -> None:
+    #     """ Create market order """
+    #     raise NotImplementedError
+    #
+    # @abstractmethod
+    # def create_order(self, order: Order) -> None:
+    #     """ Create order """
+    #     raise NotImplementedError
