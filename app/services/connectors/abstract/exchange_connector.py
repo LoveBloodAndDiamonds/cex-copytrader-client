@@ -44,13 +44,8 @@ class AbstractExchangeConnector(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def cancel_all_open_orders(self) -> dict:
+    def cancel_all_open_orders(self, symbol: str) -> dict:
         """ Cancel all opened orders """
-        raise NotImplementedError
-
-    @abstractmethod
-    def close_all_open_positions(self) -> dict:
-        """ Cancel all opened positions """
         raise NotImplementedError
 
     # @abstractmethod

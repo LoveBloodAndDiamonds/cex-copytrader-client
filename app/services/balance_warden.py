@@ -4,6 +4,7 @@ from .connectors import AbstractExchangeConnector
 from ..configuration import logger
 from ..schemas.models import UserSettings
 from ..schemas.enums import BalanceStatus
+from ..schemas.types import Order, Position
 
 
 class BalanceWardenService:
@@ -52,10 +53,37 @@ class BalanceWardenService:
         logger.warning("Stop trading event called!")
         connector: AbstractExchangeConnector | None = self._connector_factory()
         if connector:
-            connector.cancel_all_open_orders()
-            connector.close_all_open_positions()
+            self._close_all_open_positions(connector)
+            self._cancel_all_open_orders(connector)
         else:
             logger.critical("Can not get connector to call stop trading event.")
+
+    def _cancel_all_open_orders(self, connector: AbstractExchangeConnector) -> None:
+        """ Cancel all open orders in account """
+        try:
+            orders: list[Order] = connector.get_all_open_orders()
+            symbols: set[str] = set([o["symbol"] for o in orders])
+            for symbol in symbols:
+                try:
+                    result: dict = connector.cancel_all_open_orders(symbol=symbol)
+                    logger.info(f"Cancel all open orders on {symbol}: {result}")
+                except Exception as e:
+                    logger.error(f"Error while canceling all open orders on {symbol}: {e}")
+        except Exception as e:
+            logger.error(f"Error while canceling all open orders: {e}")
+
+    def _close_all_open_positions(self, connector: AbstractExchangeConnector) -> None:
+        """ Cancel all open positions in account """
+        try:
+            positions: list[Position] = connector.get_all_open_positions()
+            for position in positions:
+                try:
+                    result: dict = connector.close_position(position=position)
+                    logger.info(f"Closing position {position}: {result}")
+                except Exception as e:
+                    logger.error(f"Error while closing position {position}: {e}")
+        except Exception as e:
+            logger.error(f"Error while canceling all open positions: {e}")
 
     def on_user_settings_update(self, user_settings: UserSettings) -> None:
         """ Функция обновляет порог баланса. """

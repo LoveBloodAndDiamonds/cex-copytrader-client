@@ -70,15 +70,9 @@ class BinanceConnector(AbstractExchangeConnector):
             )
         )
 
-    def cancel_all_open_orders(self) -> dict:
+    def cancel_all_open_orders(self, symbol: str) -> dict:
         """ Cancel all opened orders """
-        # todo we need to get all orders and set it ti symbols list
-        # return self._client.futures_cancel_all_open_orders()
-        pass
-
-    def close_all_open_positions(self) -> None:
-        """ Cancel all opened positions """
-        pass  # todo
+        return self._client.futures_cancel_all_open_orders(symbol=symbol)
 
     def _create_order_kwargs(
             self,
