@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Literal, Optional
 
 from .connectors import AbstractExchangeConnector
 from ..configuration import logger
@@ -14,14 +14,15 @@ class BalanceWardenService:
 
     def __init__(
             self,
-            connector_factory: Callable[[], AbstractExchangeConnector],
+            connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]],
             balance_threshold: float,
             balance_status_callbacks: list[Callable[[BalanceStatus], None]]
     ) -> None:
         """
         :param balance_threshold: Настройки пользователя
         """
-        self._connector_factory: Callable[[], AbstractExchangeConnector] = connector_factory
+        self._connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]] = \
+            connector_factory
         self._balance_threshold: float = balance_threshold
         self._balance_status_callbacks: list[Callable[[BalanceStatus], None]] = balance_status_callbacks
 
@@ -51,7 +52,7 @@ class BalanceWardenService:
     def _stop_trade_event(self) -> None:
         # Close all orders and positions
         logger.warning("Stop trading event called!")
-        connector: AbstractExchangeConnector | None = self._connector_factory()
+        connector: AbstractExchangeConnector | None = self._connector_factory("client")
         if connector:
             self._close_all_open_positions(connector)
             self._cancel_all_open_orders(connector)

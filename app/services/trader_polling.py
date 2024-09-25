@@ -1,6 +1,6 @@
 import time
 from threading import Thread
-from typing import Callable
+from typing import Callable, Literal, Optional
 
 from .connectors import EXCHANGE_TO_POLLING_SERVICE, AbstractExchangeConnector
 from ..configuration import logger, config
@@ -15,16 +15,15 @@ class TraderPollingService(Thread):
 
     def __init__(
             self,
-            connector_factory: Callable[[], AbstractExchangeConnector],
-            trader_connector_factory: Callable[[], AbstractExchangeConnector],
+            connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]],
             user_settings: UserSettings,
             trader_settings: TraderSettings,
             interval: int | float = config.TRADER_POLLING_INTERVAL
     ) -> None:
         super().__init__(daemon=True)
 
-        self._connector_factory: Callable[[], AbstractExchangeConnector] = connector_factory
-        self._trader_connector_factory: Callable[[], AbstractExchangeConnector] = trader_connector_factory
+        self._connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]] = \
+            connector_factory
         self._user_settings: UserSettings = user_settings
         self._trader_settings: TraderSettings = trader_settings
         self._balance_status: BalanceStatus = BalanceStatus.NOT_DEFINED
@@ -39,8 +38,7 @@ class TraderPollingService(Thread):
                     continue
 
                 EXCHANGE_TO_POLLING_SERVICE[self._trader_settings.exchange].process(
-                    client_connector=self._connector_factory(),
-                    trader_connector=self._trader_connector_factory(),
+                    connector_factory=self._connector_factory,
                     user_settings=self._user_settings
                 )
 
@@ -50,11 +48,11 @@ class TraderPollingService(Thread):
                 time.sleep(self._interval)
 
     def _check_statuses(self) -> bool:
-        if not self._connector_factory():
-            logger.debug("Can not proceed polling becouse _connector_factory")
+        if not self._connector_factory("client"):
+            logger.debug("Can not proceed polling becouse client connector factory")
             return False
-        if not self._trader_connector_factory():
-            logger.debug("Can not proceed polling becouse _trader_connector_factory")
+        if not self._connector_factory("trader"):
+            logger.debug("Can not proceed polling becouse trader connector factory")
             return False
         if not self._user_settings.status:
             logger.debug("Can not proceed polling becouse _user_settings.status")

@@ -1,5 +1,5 @@
 from threading import Thread
-from typing import Callable
+from typing import Callable, Literal, Optional
 
 from .connectors import AbstractExchangeConnector
 from ..configuration import logger
@@ -20,13 +20,14 @@ class TraderWebsocketService(Thread):
 
     def __init__(
             self,
-            connector_factory: Callable[[], AbstractExchangeConnector],
+            connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]],
             user_settings: UserSettings,
             trader_settings: TraderSettings,
     ) -> None:
         super().__init__(daemon=True)
 
-        self._connector_factory: Callable[[], AbstractExchangeConnector] = connector_factory
+        self._connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]] = \
+            connector_factory
         self._user_settings: UserSettings = user_settings
         self._trader_settings: TraderSettings = trader_settings
         self._balance_status: BalanceStatus = BalanceStatus.NOT_DEFINED

@@ -1,6 +1,6 @@
 import time
 from threading import Thread
-from typing import Callable, Optional
+from typing import Callable, Optional, Literal
 
 from .connectors import AbstractExchangeConnector
 from ..configuration import config, logger
@@ -10,7 +10,7 @@ class BalanceUpdaterService(Thread):
 
     def __init__(
             self,
-            connector_factory: Callable[[], Optional[AbstractExchangeConnector]],
+            connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]],
             balance_changed_callbacks: list[Callable[[float], None]],
             interval: int | float = config.BALANCE_UPDATE_INTERVAL
     ) -> None:
@@ -20,7 +20,8 @@ class BalanceUpdaterService(Thread):
         """
         super().__init__(daemon=True)
 
-        self._connector_factory: Callable[[], Optional[AbstractExchangeConnector]] = connector_factory
+        self._connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]] \
+            = connector_factory
         self._balance_changed_callbacks: list[callable] = balance_changed_callbacks
 
         self._interval: int | float = interval
@@ -30,7 +31,7 @@ class BalanceUpdaterService(Thread):
         debug_log_sent: bool = False
         while True:
             try:
-                connector: AbstractExchangeConnector | None = self._connector_factory()
+                connector: AbstractExchangeConnector | None = self._connector_factory("client")
                 if connector:
                     debug_log_sent: bool = False
                     try:

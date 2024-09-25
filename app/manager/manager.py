@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Literal
 
 from ..configuration import logger
 from ..database import Keys, Database
@@ -9,7 +9,7 @@ from ..services import *
 
 class ServiceManager:
     _running: bool = False
-    _connector: Optional[AbstractExchangeConnector] = None
+    _client_connector: Optional[AbstractExchangeConnector] = None
     _trader_connector: Optional[AbstractExchangeConnector] = None
 
     _trader_websocket_service: TraderWebsocketService
@@ -42,7 +42,6 @@ class ServiceManager:
         cls._balance_notifyer_service = BalanceNotifyerService()
         cls._trader_polling_service = TraderPollingService(
             connector_factory=cls._connector_factory,
-            trader_connector_factory=cls._trader_connector_factory,
             user_settings=user_settings,
             trader_settings=trader_settings
         )
@@ -94,26 +93,17 @@ class ServiceManager:
         """ Функция обновляет коннектор. """
         try:
             if keys.is_fully_filled():
-                cls._connector = EXCHANGE_TO_CONNECTOR[keys.exchange](
+                cls._client_connector = EXCHANGE_TO_CONNECTOR[keys.exchange](
                     api_key=keys.api_key,
                     api_secret=keys.api_secret,
                 )
                 logger.debug(f"Connector updated")
             else:
-                cls._connector = None
+                cls._client_connector = None
                 logger.info(f"Keys model is not fully filled, can't init connector")
         except Exception as e:
-            cls._connector = None
+            cls._client_connector = None
             logger.error(f"Error while init connector: {e}")
-
-    @classmethod
-    def _connector_factory(cls) -> AbstractExchangeConnector:
-        """
-        Функция передается как фабрика коннектора, при обновлении коннектора, нужно будет единожды обновлять его тут,
-        и он автоматически должен подтягиваться в другие классы.
-        :return:
-        """
-        return cls._connector
 
     @classmethod
     def _init_trader_connector(cls, trader_settings: TraderSettings) -> None:
@@ -133,10 +123,15 @@ class ServiceManager:
             logger.error(f"Error while init trader connector: {e}")
 
     @classmethod
-    def _trader_connector_factory(cls) -> AbstractExchangeConnector:
+    def _connector_factory(cls, which: Literal["trader", "client"]) -> AbstractExchangeConnector:
         """
         Функция передается как фабрика коннектора, при обновлении коннектора, нужно будет единожды обновлять его тут,
-        и он автоматически должен подтягиваться в другие классы.
+        и он автоматически будет подтягиваться в другие классы.
         :return:
         """
-        return cls._trader_connector
+        if which == "client":
+            return cls._client_connector
+        elif which == "trader":
+            return cls._trader_connector
+        else:
+            raise ValueError("Wrong connector type!")

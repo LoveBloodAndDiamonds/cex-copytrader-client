@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Callable, Literal, Optional
 
 from app.schemas.models import UserSettings
 from .exchange_connector import AbstractExchangeConnector
@@ -13,8 +14,7 @@ class AbstractPollingService(ABC):
     @abstractmethod
     def process(
             cls,
-            client_connector: AbstractExchangeConnector,
-            trader_connector: AbstractExchangeConnector,
+            connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]],
             user_settings: UserSettings
     ) -> None:
         """ Проверка ордеров и позиций, выставление их и тд """

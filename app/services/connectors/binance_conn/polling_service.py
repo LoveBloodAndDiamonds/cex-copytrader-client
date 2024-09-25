@@ -1,3 +1,5 @@
+from typing import Callable, Literal, Optional
+
 from app.configuration import logger
 from app.schemas.models import UserSettings
 from app.schemas.enums import Exchange
@@ -14,12 +16,14 @@ class BinancePollingService(AbstractPollingService):
     @classmethod
     def process(
             cls,
-            client_connector: AbstractExchangeConnector,
-            trader_connector: AbstractExchangeConnector,
+            connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]],
             user_settings: UserSettings,
     ) -> None:
         """ Проверка ордеров и позиций, выставление их и тд """
         # logger.info(f"----------------------------------------------------")
+
+        client_connector: AbstractExchangeConnector = connector_factory("client")
+        trader_connector: AbstractExchangeConnector = connector_factory("trader")
 
         # find positions and order for both accounts
         client_positions, trader_positions = cls._positions_finder(
