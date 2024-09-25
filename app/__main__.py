@@ -1,11 +1,11 @@
-from fastapi import FastAPI
 import uvicorn
+from fastapi import FastAPI
 
 from .api.external import master_server_router
 from .api.internal import register_admin_routes
-from .manager import ServiceManager
 from .configuration import logger, config
 from .database import Database
+from .manager import ServiceManager
 
 # Main fastapi obj
 app = FastAPI()

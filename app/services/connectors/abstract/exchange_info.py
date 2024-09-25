@@ -1,5 +1,5 @@
-from threading import Thread
 from abc import abstractmethod, ABC
+from threading import Thread
 
 
 class AbstractExchangeInfo(ABC, Thread):

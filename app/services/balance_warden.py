@@ -2,8 +2,8 @@ from typing import Callable, Literal, Optional
 
 from .connectors import AbstractExchangeConnector
 from ..configuration import logger
-from ..schemas.models import UserSettings
 from ..schemas.enums import BalanceStatus
+from ..schemas.models import UserSettings
 from ..schemas.types import Order, Position
 
 

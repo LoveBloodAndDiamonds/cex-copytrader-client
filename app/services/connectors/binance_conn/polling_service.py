@@ -1,8 +1,8 @@
 from typing import Callable, Literal, Optional
 
 from app.configuration import logger
-from app.schemas.models import UserSettings
 from app.schemas.enums import Exchange
+from app.schemas.models import UserSettings
 from app.schemas.types import Position, Order
 from app.utils import find_trader_unique_orders, find_client_unique_orders, find_unique_positions
 from ..abstract import AbstractPollingService, AbstractExchangeConnector

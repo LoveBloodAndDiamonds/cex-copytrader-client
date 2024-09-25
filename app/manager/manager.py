@@ -3,8 +3,8 @@ from typing import Optional, Literal
 from ..configuration import logger
 from ..database import Keys, Database
 from ..schemas.models import UserSettings, TraderSettings
-from ..utils import request_model
 from ..services import *
+from ..utils import request_model
 
 
 class ServiceManager:

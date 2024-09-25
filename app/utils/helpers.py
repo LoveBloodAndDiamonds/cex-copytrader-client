@@ -1,9 +1,9 @@
 import requests
 
-from app.schemas.types import M, Position, Order
-from app.schemas.exceptions import MasterServerConnectionError
-from app.schemas.enums import Exchange
 from app.configuration import config
+from app.schemas.enums import Exchange
+from app.schemas.exceptions import MasterServerConnectionError
+from app.schemas.types import M, Position, Order
 
 
 def request_model(endpoint: str, model: M) -> type[M]:

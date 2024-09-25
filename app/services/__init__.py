@@ -1,6 +1,6 @@
 from .balance_notifyer import BalanceNotifyerService
 from .balance_updater import BalanceUpdaterService
 from .balance_warden import BalanceWardenService
-from .trader_websocket import TraderWebsocketService
-from .trader_polling import TraderPollingService
 from .connectors import AbstractExchangeConnector, EXCHANGE_TO_CONNECTOR
+from .trader_polling import TraderPollingService
+from .trader_websocket import TraderWebsocketService
