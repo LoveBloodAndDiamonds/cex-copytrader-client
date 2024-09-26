@@ -132,7 +132,7 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
 
             # Limit orders / take profit orders / stop loss orders
             else:
-                if order_status == "CANCELED":
+                if order_status == "CANCELED" or order_status == "EXPIRED":
                     logger.debug(f"Canceling order {order}")
                     result: dict = self._connector_factory("client").cancel_order_by_client_order_id(
                         symbol=symbol, client_order_id=order_id)

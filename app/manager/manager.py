@@ -69,7 +69,7 @@ class ServiceManager:
 
         # Запускаем сервисы
         cls._balance_updater_service.start()
-        cls._trader_polling_service.start()
+        # cls._trader_polling_service.start()
         cls._trader_websocket_service.start()
 
     @classmethod
