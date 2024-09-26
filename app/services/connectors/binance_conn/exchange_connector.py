@@ -1,7 +1,6 @@
 from typing import Optional, Literal
 
-from binance import Client
-from binance.enums import *
+from binance.um_futures import UMFutures
 
 from app.schemas.types import Order, Position
 from .exchange_info import exchange_info
@@ -10,39 +9,38 @@ from ..abstract import AbstractExchangeConnector
 
 class BinanceConnector(AbstractExchangeConnector):
 
+    recvWindow: dict = {"recvWindow": 20000}
+
     def __init__(self, api_key: str, api_secret: str) -> None:
         super().__init__(api_key=api_key, api_secret=api_secret)
 
-        self._client: Client = Client(api_key=api_key, api_secret=api_secret)
-
-        self._client.futures_stream_get_listen_key()
+        self._client: UMFutures = UMFutures(key=api_key, secret=api_secret)
 
     def cancel_order(self, symbol: str, order_id: int | str) -> dict:
         """ Cancel order by id """
-        return self._client.futures_cancel_order(symbol=symbol, orderId=order_id)
+        return self._client.cancel_order(symbol=symbol, orderId=order_id)  # noqa
 
     def get_current_balance(self) -> float:
         """ Returns current user balance. """
-        for asset in self._client.futures_account_balance():
+        for asset in self._client.balance(**self.recvWindow):  # noqa
             if asset["asset"] == "USDT":
-                # return float(asset["availableBalance"])
                 return float(asset["balance"])
 
     def get_all_open_positions(self) -> list[dict]:
         """ Returns list of opened positions """
         result: list[Position] = []
-        for p in self._client.futures_position_information():
+        for p in self._client.get_position_risk(**self.recvWindow):  # noqa
             if float(p["positionAmt"]) != 0:
                 result.append(p)
         return result
 
     def get_all_open_orders(self) -> list[dict]:
         """ Returns list of opened orders """
-        return self._client.futures_get_open_orders()
+        return self._client.get_orders(**self.recvWindow)  # noqa
 
     def copy_order(self, order: Order) -> dict:
         """ Copy order from trader account """
-        return self._client.futures_create_order(
+        return self._client.new_order(
             **self._create_order_kwargs(
                 symbol=order["symbol"],
                 type=order["type"],
@@ -56,7 +54,8 @@ class BinanceConnector(AbstractExchangeConnector):
                 stop_price=float(order["stopPrice"]),
                 callback_rate=float(order.get("priceRate", 0.0)),
                 activation_price=float(order.get("activatePrice", 0.0))
-            )
+            ),
+            **self.recvWindow
         )
 
     def close_position(self, position: Position) -> dict:
@@ -65,23 +64,24 @@ class BinanceConnector(AbstractExchangeConnector):
         if position_amount == 0:
             raise ValueError(f"Trying to close position with positionAmt={position_amount}")
 
-        return self._client.futures_create_order(
+        return self._client.new_order(
             **self._create_order_kwargs(
                 symbol=position["symbol"],
-                type=FUTURE_ORDER_TYPE_MARKET,
+                type="MARKET",
                 side="SELL" if position_amount > 0 else "BUY",
                 position_side=position["positionSide"],
                 quantity=position_amount,
-            )
+            ),
+            **self.recvWindow
         )
 
     def cancel_all_open_orders(self, symbol: str) -> dict:
         """ Cancel all opened orders """
-        return self._client.futures_cancel_all_open_orders(symbol=symbol)
+        return self._client.cancel_open_orders(symbol=symbol, **self.recvWindow)  # noqa
 
     def cancel_order_by_client_order_id(self, symbol: str, client_order_id: str) -> dict:
         """ Cancel order by client order id """
-        return self._client.futures_cancel_order(symbol=symbol, origClientOrderId=client_order_id)
+        return self._client.cancel_order(symbol=symbol, origClientOrderId=client_order_id, **self.recvWindow)  # noqa
 
     def close_position_from_websocket_message(self, trader_position: dict) -> dict:
         """ Closing position after websocket message
@@ -100,13 +100,14 @@ class BinanceConnector(AbstractExchangeConnector):
         symbol: str = trader_position["s"]
         position_side: Literal["SHORT", "LONG"] = trader_position["ps"]
 
-        index: int = 0
-        if position_side == "LONG":
+        if position_side in ["LONG", "BOTH"]:
             index: int = 0
         elif position_side == "SHORT":
             index: int = 1
+        else:
+            raise ValueError(f"Wrong position side: {position_side}")
 
-        position: Position = self._client.futures_position_information(symbol=symbol)[index]
+        position: Position = self._client.get_position_risk(symbol=symbol, **self.recvWindow)[index]  # noqa
 
         return self.close_position(position=position)
 
@@ -155,7 +156,7 @@ class BinanceConnector(AbstractExchangeConnector):
             "gtd":0                      // TIF GTD order auto cancel time
           }
         """
-        return self._client.futures_create_order(
+        return self._client.new_order(
             **self._create_order_kwargs(
                 symbol=order["s"],
                 type=order["ot"],
@@ -166,8 +167,21 @@ class BinanceConnector(AbstractExchangeConnector):
                 quantity=float(order["q"]),
                 stop_price=float(order["sp"]),
                 close_position=order.get("cp", False),
-            )
+            ),
+            **self.recvWindow
         )
+
+    def renew_listen_key(self, listen_key: str) -> None:
+        """ Renews listen key """
+        return self._client.renew_listen_key(listenKey=listen_key)  # noqa
+
+    def create_listen_key(self) -> str:
+        """ Creates listen key """
+        return self._client.new_listen_key().get("listenKey")  # noqa
+
+    def close_listen_key(self, listen_key: str) -> None:
+        """ Closes listen key for user data stream """
+        return self._client.close_listen_key(listenKey=listen_key)  # noqa
 
     def _create_order_kwargs(
             self,
@@ -179,7 +193,7 @@ class BinanceConnector(AbstractExchangeConnector):
             close_position: Optional[bool] = False,
             price: Optional[float] = 0,
             stop_price: Optional[float] = 0,
-            time_in_force: Optional[str] = TIME_IN_FORCE_GTC,
+            time_in_force: Optional[str] = "GTC",
             callback_rate: Optional[float] = 0.0,
             client_order_id: Optional[str] = None,
             activation_price: Optional[float] = 0.0
@@ -202,29 +216,29 @@ class BinanceConnector(AbstractExchangeConnector):
         if stop_price:
             stop_price = exchange_info.round_price(symbol, stop_price)
 
-        if type == FUTURE_ORDER_TYPE_MARKET:
+        if type == "MARKET":
             kwargs['quantity'] = str(quantity)
 
-        elif type == FUTURE_ORDER_TYPE_LIMIT:
+        elif type == "LIMIT":
             kwargs['price'] = str(price)
             kwargs['timeInForce'] = str(time_in_force)
             kwargs['quantity'] = str(quantity)
 
-        elif type == FUTURE_ORDER_TYPE_STOP:
+        elif type == "STOP":
             kwargs['quantity'] = str(quantity)
             kwargs['stopPrice'] = str(stop_price)
             kwargs['price'] = str(price)
 
-        elif type == FUTURE_ORDER_TYPE_STOP_MARKET:
+        elif type == "STOP_MARKET":
             kwargs['stopPrice'] = str(stop_price)
             kwargs['closePosition'] = str(close_position)
             kwargs['quantity'] = str(quantity)
 
-        elif type == FUTURE_ORDER_TYPE_TAKE_PROFIT_MARKET:
+        elif type == "TAKE_PROFIT_MARKET":
             kwargs['stopPrice'] = str(stop_price)
             kwargs['closePosition'] = str(close_position)
 
-        elif type == FUTURE_ORDER_TYPE_TRAILING_STOP_MARKET:
+        elif type == "TRAILING_STOP_MARKET":
             kwargs['quantity'] = str(quantity)
             kwargs['activationPrice'] = str(activation_price)
             kwargs['callbackRate'] = str(callback_rate)

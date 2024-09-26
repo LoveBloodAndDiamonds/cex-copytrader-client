@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 
+from .utils import patches  # apply patched  # noqa
 from .api.external import master_server_router
 from .api.internal import register_admin_routes
 from .configuration import logger, config

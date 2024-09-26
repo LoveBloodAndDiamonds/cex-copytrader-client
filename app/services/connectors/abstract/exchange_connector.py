@@ -63,6 +63,24 @@ class AbstractExchangeConnector(ABC):
         """ Cancel all opened orders """
         raise NotImplementedError
 
+    def renew_listen_key(self, listen_key: str) -> None:
+        """ Renews listen key
+         binance method
+         """
+        raise NotImplementedError
+
+    def create_listen_key(self) -> str:
+        """ Creates listen key
+         binance method
+         """
+        raise NotImplementedError
+
+    def close_listen_key(self, listen_key: str) -> None:
+        """ Closes listen key for user data stream
+         binance method
+         """
+        raise NotImplementedError
+
     # @abstractmethod
     # def open_position(self, position: Position) -> None:
     #     """ Create market order """

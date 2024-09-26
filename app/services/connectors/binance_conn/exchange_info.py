@@ -5,8 +5,7 @@ __all__ = ["exchange_info", ]
 
 import re
 import time
-
-from binance import Client
+import requests
 
 from app.configuration import logger
 from ..abstract import AbstractExchangeInfo
@@ -14,15 +13,13 @@ from ..abstract import AbstractExchangeInfo
 
 class ExchangeInfo(AbstractExchangeInfo):
     precisions: dict[str: list[int, int]] = {}
-    binance: Client = None
 
     @classmethod
     def run(cls) -> None:
-        cls.binance = Client()  # init it in thread
-
         while True:
             try:
-                exchange_info_dict: dict = cls.binance.futures_exchange_info()
+                response: requests.Response = requests.get(url="https://fapi.binance.com/fapi/v1/exchangeInfo")
+                exchange_info_dict: dict = response.json()
                 for i in exchange_info_dict['symbols']:
                     filters = i['filters']
                     tick_size, step_size = None, None

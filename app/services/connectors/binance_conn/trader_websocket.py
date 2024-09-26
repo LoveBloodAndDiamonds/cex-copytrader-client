@@ -1,8 +1,9 @@
+import json
+import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Literal, Optional
 
-from binance import ThreadedWebsocketManager
-from binance.enums import *
+from binance.websocket.um_futures.websocket_client import UMFuturesWebsocketClient
 
 from app.configuration import logger
 from app.schemas.models import UserSettings, TraderSettings
@@ -17,17 +18,23 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
             connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]],
             user_settings: UserSettings,
             trader_settings: TraderSettings,
+            callback: Callable[[dict], None],
             max_workers: int = 5
     ) -> None:
         super().__init__(
+            callback=callback,
             connector_factory=connector_factory,
             user_settings=user_settings,
             trader_settings=trader_settings
         )
 
+        self._is_running: bool = False
+
         self._executor: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=max_workers)
-        # self._ws: ThreadedWebsocketManager | None = None
-        self._ws: ThreadedWebsocketManager | None = None
+
+        self._ws: UMFuturesWebsocketClient | None = None
+
+        self._listen_key: str | None = None
 
         self._positions: dict[str, dict[Literal["LONG", "SHORT", "BOTH"], dict]] = {}
         # {'TRXUSDT':
@@ -43,17 +50,75 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
         #            's': 'TRXUSDT',
         #            'up': '-0.00113000'}}}
 
-    def handle_websocket_message(self, msg: dict) -> None:
+    def start_websocket(self) -> None:
+        """ Функция создает и возвращает клиент вебсокета для конкретной биржи. """
+        if self._is_running:
+            return  # Если вебсокет уже запущен, не перезапускаем его
+
+        self._is_running: bool = True
+
+        self._ws: UMFuturesWebsocketClient = UMFuturesWebsocketClient(
+            on_message=self._callback,
+            on_open=lambda *args: logger.info(f"Trader websocket opened: {args}"),
+            on_close=lambda *args: logger.info(f"Trader websocket closed: {args}"),
+            on_ping=lambda *args: logger.debug(f"Trader websocket ping: {args}"),
+            on_error=lambda *args: logger.error(f"Trader websocket error: {args}"),
+            on_pong=lambda *args: logger.debug(f"Trader websocket pong: {args}"),
+        )
+        self._listen_key: str = self._connector_factory("trader").create_listen_key()
+        self._ws.user_data(listen_key=self._listen_key)
+
+        self._executor.submit(self._listen_key_renew_thread)
+
+    def stop_websocket(self) -> None:
+        """ Функция останавливает вебсокет. """
+        self._is_running: bool = False
+        try:
+            if self._listen_key:
+                self._connector_factory("trader").close_listen_key(listen_key=self._listen_key)
+        except Exception as e:
+            logger.error(f"Error while closing listen key on stop websocket: {e}")
+        self._listen_key = None
+        self._ws.stop()
+
+    def handle_websocket_message(self, *args, **kwargs) -> None:
         """ Функция принимает и обрабатывает сообщение с вебсокета. """
+        msg: str = args[1]
+        msg: dict = json.loads(msg)
+
         event_type: str = msg.get("e")
         if event_type == "ORDER_TRADE_UPDATE":
             self._executor.submit(self._order_trade_update, msg)
         elif event_type == "ACCOUNT_CONFIG_UPDATE":
-            self._executor.submit(self._account_config_update, msg)
+            pass  # self._executor.submit(self._account_config_update, msg)
         elif event_type == "ACCOUNT_UPDATE":
             self._executor.submit(self._account_update, msg)
         else:
             logger.debug(f"Unhandled event type {event_type}: {msg}")
+
+    def _ping_thread(self) -> None:
+        """ Function pings binance.com """
+        while self._is_running:
+            try:
+                if self._ws:
+                    self._ws.ping()
+            except Exception as e:
+                logger.error(f"Error while ping: {e}")
+            time.sleep(60)  # every 60 sec
+
+    def _listen_key_renew_thread(self) -> None:
+        """
+        Function renews listen key
+        :return:
+        """
+        while self._is_running:
+            try:
+                if self._listen_key:
+                    self._connector_factory("trader").renew_listen_key(listen_key=self._listen_key)
+                    logger.debug("Listen key renewed")
+            except Exception as e:
+                logger.error(f"Error while renew listen key: {e}")
+            time.sleep(60 * 20)  # every 20 min
 
     def _order_trade_update(self, msg: dict) -> None:
         """
@@ -115,7 +180,7 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
             # order_status_2: str = order["x"]
 
             # Market order need to be placed other scenario
-            if order_type == FUTURE_ORDER_TYPE_MARKET:
+            if order_type == "MARKET":
                 if order_status == "FILLED":
                     try:
                         position: dict = self._positions[symbol][position_side]
@@ -218,50 +283,3 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
             # pprint(self._positions)
         except Exception as e:
             logger.error(f"Error while _account_update: {e}")
-
-    def _account_config_update(self, msg: dict) -> None:
-        """
-        {
-            "e":"ACCOUNT_CONFIG_UPDATE",       // Event Type
-            "E":1611646737479,		           // Event Time
-            "T":1611646737476,		           // Transaction Time
-            "ac":{
-            "s":"BTCUSDT",					   // symbol
-            "l":25						       // leverage
-
-            }
-        }
-
-         OR
-
-
-        {
-            "e":"ACCOUNT_CONFIG_UPDATE",       // Event Type
-            "E":1611646737479,		           // Event Time
-            "T":1611646737476,		           // Transaction Time
-            "ai":{							   // User's Account Configuration
-            "j":true						   // Multi-Assets Mode
-            }
-        }
-        """
-        try:
-            pass  # Какая то сетевая операция, которая занимает 100-300 мсек.
-        except Exception as e:
-            logger.error(f"Error while _account_config_update: {e}")
-
-    def start_websocket(self, callback: Callable[[dict], None]) -> None:
-        """ Функция создает и возвращает клиент вебсокета для конкретной биржи. """
-        # self._ws = ThreadedWebsocketManager(
-        #     api_key=self._trader_settings.api_key,
-        #     api_secret=self._trader_settings.api_secret
-        # )
-        self._ws = ThreadedWebsocketManager(
-            api_key=self._trader_settings.api_key,
-            api_secret=self._trader_settings.api_secret
-        )
-        self._ws.start()
-        self._ws.start_futures_user_socket(callback=callback)
-
-    def stop_websocket(self) -> None:
-        """ Функция останавливает вебсокет. """
-        self._ws.stop()

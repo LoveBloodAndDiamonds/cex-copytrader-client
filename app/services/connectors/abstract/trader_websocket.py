@@ -10,10 +10,12 @@ class AbstractTraderWebsocket(ABC):
 
     def __init__(
             self,
+            callback: Callable[[dict], None],
             connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]],
             user_settings: UserSettings,
             trader_settings: TraderSettings,
     ) -> None:
+        self._callback: Callable[[dict], None] = callback
         self._user_settings: UserSettings = user_settings
         self._trader_settings: TraderSettings = trader_settings
         self._connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]] = \
@@ -21,12 +23,12 @@ class AbstractTraderWebsocket(ABC):
         self._ws = None
 
     @abstractmethod
-    def handle_websocket_message(self, msg: dict) -> None:
+    def handle_websocket_message(self, *args, **kwargs) -> None:
         """ Функция принимает и обрабатывает сообщение с вебсокета. """
         raise NotImplementedError
 
     @abstractmethod
-    def start_websocket(self, callback: Callable[[dict], None]) -> None:
+    def start_websocket(self) -> None:
         """ Функция создает и возвращает клиент вебсокета для конкретной биржи. """
         raise NotImplementedError
 

@@ -1,3 +1,4 @@
+import json
 import time
 from datetime import datetime
 from typing import Callable, Literal, Optional
@@ -44,11 +45,14 @@ class TraderWebsocketService(AbstractService):
         """ Запуск соединения с вебсокетом трейдера. """
         logger.debug("Starting trader websocket")
         self._websocket = EXCHANGE_TO_WEBSOCKET[self._trader_settings.exchange](
+            callback=self._message_middleware,
             connector_factory=self._connector_factory,
             user_settings=self._user_settings,
             trader_settings=self._trader_settings,
         )
-        self._websocket.start_websocket(callback=self._message_middleware)
+        self._websocket.start_websocket()
+
+    # todo restart every 12 hours
 
     def _restart(self) -> None:
         """ Перезапуск соединения с вебсокетом трейдера. """
@@ -61,14 +65,14 @@ class TraderWebsocketService(AbstractService):
 
         self.start()
 
-    def _message_middleware(self, msg: dict) -> None:
+    def _message_middleware(self, *args, **kwargs) -> None:
         """ Мидлварь для принятия сообщения, в котором проводятся дополнительные проверки. """
-        logger.debug(f"Websocket message: {msg}")
+        logger.debug(f"Websocket message: {args}, {kwargs}")
         self._last_message_time = time.time()
         try:
-            self._websocket.handle_websocket_message(msg)
+            self._websocket.handle_websocket_message(*args, **kwargs)
         except Exception as e:
-            logger.error(f"Exception while handling websocket message({msg}): {e}")
+            logger.error(f"Exception while handling websocket message({args=}, {kwargs=}): {e}")
 
     def _check_statuses(self) -> bool:
         """ Функция проверяет все статусы и переменные, перед тем как дать разрешение на продолжение работы. """
