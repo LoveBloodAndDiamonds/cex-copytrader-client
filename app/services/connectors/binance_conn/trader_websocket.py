@@ -1,11 +1,12 @@
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Literal, Optional
 
-from binance import ThreadedWebsocketManager
+# from binance import ThreadedWebsocketManager
 from binance.enums import *
 
 from app.configuration import logger
 from app.schemas.models import UserSettings, TraderSettings
+from ._patch import PatchedThreadedWebsocketManager
 from ..abstract import AbstractTraderWebsocket, AbstractExchangeConnector
 
 
@@ -26,7 +27,8 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
         )
 
         self._executor: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=max_workers)
-        self._ws: ThreadedWebsocketManager | None = None
+        # self._ws: ThreadedWebsocketManager | None = None
+        self._ws: PatchedThreadedWebsocketManager | None = None
 
         self._positions: dict[str, dict[Literal["LONG", "SHORT", "BOTH"], dict]] = {}
         # {'TRXUSDT':
@@ -250,7 +252,11 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
 
     def start_websocket(self, callback: Callable[[dict], None]) -> None:
         """ Функция создает и возвращает клиент вебсокета для конкретной биржи. """
-        self._ws = ThreadedWebsocketManager(
+        # self._ws = ThreadedWebsocketManager(
+        #     api_key=self._trader_settings.api_key,
+        #     api_secret=self._trader_settings.api_secret
+        # )
+        self._ws = PatchedThreadedWebsocketManager(
             api_key=self._trader_settings.api_key,
             api_secret=self._trader_settings.api_secret
         )
