@@ -97,7 +97,12 @@ class BinanceConnector(AbstractExchangeConnector):
         # position = trader position
         symbol: str = trader_position["s"]
         position_side: Literal["SHORT", "LONG"] = trader_position["ps"]
-        index: int = 0 if position_side == "LONG" else 1
+
+        index: int = 0
+        if position_side == "LONG":
+            index: int = 0
+        elif position_side == "SHORT":
+            index: int = 1
 
         position: Position = self._client.futures_position_information(symbol=symbol)[index]
 
