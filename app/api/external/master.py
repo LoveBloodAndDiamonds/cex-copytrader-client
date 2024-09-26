@@ -2,6 +2,7 @@ __all__ = ["router", ]
 
 from fastapi import APIRouter, Response
 from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from app.configuration import logger, config
 from app.manager import ServiceManager
@@ -48,7 +49,7 @@ async def handle_trader_settings_update(request: Request) -> Response:
 
 
 @router.get("/service_statuses")
-async def send_service_statuses(request: Request) -> Response:
+async def send_service_statuses(request: Request) -> JSONResponse:
     """
     Функция возвращает словарь с информацией о состоянии сервисов.
     """
@@ -57,6 +58,7 @@ async def send_service_statuses(request: Request) -> Response:
     # Проверка на то что запрос пришел с master сервера
     if request.client.host != config.MASTER_SERVER_HOST:
         logger.warning(f"Request from unknown host: {request.client.host}:{request.client.port}")
-        return Response(status_code=403)
+        return JSONResponse(status_code=403, content={"error": "Forbidden"})
 
-    return Response(content=ServiceManager.get_service_statuses())
+    # Возвращаем JSON-ответ со статусами сервисов
+    return JSONResponse(content=ServiceManager.get_service_statuses())
