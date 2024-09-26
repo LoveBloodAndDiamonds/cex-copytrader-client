@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
-from typing import Callable, Literal, Optional, TypeVar
+from typing import Callable, Literal, Optional
 
 from binance import ThreadedWebsocketManager  # noqa
 from binance.enums import *
@@ -9,8 +9,8 @@ from app.schemas.models import UserSettings, TraderSettings
 from ._patch import PatchedThreadedWebsocketManager  # noqa
 from ..abstract import AbstractTraderWebsocket, AbstractExchangeConnector
 
-# define patched or not
-twm = ThreadedWebsocketManager
+# type of twm
+twm = PatchedThreadedWebsocketManager
 
 
 class BinanceTraderWebsocket(AbstractTraderWebsocket):
