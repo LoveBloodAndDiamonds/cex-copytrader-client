@@ -43,7 +43,7 @@ class TraderPollingService(AbstractService, Thread):
                     and bool(self._connector_factory("trader"))
                     and self._last_update_time + 60 > time.time()
             ),
-            last_update_time=datetime.fromtimestamp(self._last_update_time)
+            last_update_time=datetime.fromtimestamp(self._last_update_time).isoformat(timespec='seconds')
         )
 
     get_status.__doc__ = AbstractService.get_status.__doc__

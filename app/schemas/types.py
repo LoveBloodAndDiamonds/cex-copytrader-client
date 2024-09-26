@@ -1,10 +1,9 @@
 from typing import TypeVar, TypeAlias, TypedDict, Optional
-from datetime import datetime
 
 
 class ServiceStatus(TypedDict):
     status: Optional[bool]
-    last_update_time: datetime
+    last_update_time: str
 
 
 class UnifiedServiceStatus(TypedDict):
