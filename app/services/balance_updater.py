@@ -51,6 +51,7 @@ class BalanceUpdaterService(AbstractService, Thread):
                         balance: float = connector.get_current_balance()
                     except Exception as e:
                         logger.error(f"Error while gettings balance: {e}")
+                        time.sleep(self._interval * 10)
                     else:
                         for callback in self._balance_changed_callbacks:
                             try:
