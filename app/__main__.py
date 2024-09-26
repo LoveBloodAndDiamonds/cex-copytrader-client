@@ -38,7 +38,7 @@ def shutdown() -> None:
 try:
     startup()
 
-    uvicorn.run(app, host=config.SERVER_HOST, port=config.SERVER_PORT, log_level="error")
+    uvicorn.run(app, host=config.SERVER_HOST, port=config.SERVER_PORT, log_level="error", loop="uvloop")
 except Exception as e:
     logger.exception(f"Unexcepted exception at top level: {e}")
 finally:
