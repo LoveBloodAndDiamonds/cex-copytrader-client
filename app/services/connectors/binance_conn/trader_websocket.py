@@ -10,7 +10,8 @@ from ._patch import PatchedThreadedWebsocketManager  # noqa
 from ..abstract import AbstractTraderWebsocket, AbstractExchangeConnector
 
 # type of twm
-twm = ThreadedWebsocketManager
+twm = PatchedThreadedWebsocketManager
+# twm = ThreadedWebsocketManager
 
 
 class BinanceTraderWebsocket(AbstractTraderWebsocket):

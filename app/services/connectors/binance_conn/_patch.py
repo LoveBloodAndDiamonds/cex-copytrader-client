@@ -30,14 +30,15 @@ RuntimeWarning: Enable tracemalloc to get the object allocation traceback
 """
 
 import asyncio
+from threading import Thread
 import time
 from typing import Optional, Dict, Any, Callable
 
 from binance import AsyncClient, BinanceSocketManager
-from binance.threaded_stream import ThreadedApiManager
+from binance.helpers import get_loop
 
 
-class _PatchedThreadedApiManager(ThreadedApiManager):
+class _PatchedThreadedApiManager(Thread):
 
     def __init__(
             self, api_key: Optional[str] = None, api_secret: Optional[str] = None,
@@ -48,7 +49,7 @@ class _PatchedThreadedApiManager(ThreadedApiManager):
 
         """
         super().__init__()
-        self._loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
+        self._loop: asyncio.AbstractEventLoop = get_loop()
         self._client: Optional[AsyncClient] = None
         self._running: bool = True
         self._socket_running: Dict[str, bool] = {}
@@ -87,7 +88,8 @@ class _PatchedThreadedApiManager(ThreadedApiManager):
         del self._socket_running[path]
 
     def run(self):
-        self._loop.run_until_complete(self.socket_listener())
+        self._loop.create_task(self.socket_listener())
+        # self._loop.run_until_complete(self.socket_listener())
 
     def stop_socket(self, socket_name):
         if socket_name in self._socket_running:
