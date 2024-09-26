@@ -15,6 +15,8 @@ class BinanceConnector(AbstractExchangeConnector):
 
         self._client: Client = Client(api_key=api_key, api_secret=api_secret)
 
+        self._client.futures_stream_get_listen_key()
+
     def cancel_order(self, symbol: str, order_id: int | str) -> dict:
         """ Cancel order by id """
         return self._client.futures_cancel_order(symbol=symbol, orderId=order_id)

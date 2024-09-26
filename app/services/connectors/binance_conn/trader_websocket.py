@@ -1,17 +1,12 @@
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Literal, Optional
 
-from binance import ThreadedWebsocketManager  # noqa
+from binance import ThreadedWebsocketManager
 from binance.enums import *
 
 from app.configuration import logger
 from app.schemas.models import UserSettings, TraderSettings
-from ._patch import PatchedThreadedWebsocketManager  # noqa
 from ..abstract import AbstractTraderWebsocket, AbstractExchangeConnector
-
-# type of twm
-twm = PatchedThreadedWebsocketManager
-# twm = ThreadedWebsocketManager
 
 
 class BinanceTraderWebsocket(AbstractTraderWebsocket):
@@ -32,7 +27,7 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
 
         self._executor: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=max_workers)
         # self._ws: ThreadedWebsocketManager | None = None
-        self._ws: twm | None = None
+        self._ws: ThreadedWebsocketManager | None = None
 
         self._positions: dict[str, dict[Literal["LONG", "SHORT", "BOTH"], dict]] = {}
         # {'TRXUSDT':
@@ -260,7 +255,7 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
         #     api_key=self._trader_settings.api_key,
         #     api_secret=self._trader_settings.api_secret
         # )
-        self._ws = twm(
+        self._ws = ThreadedWebsocketManager(
             api_key=self._trader_settings.api_key,
             api_secret=self._trader_settings.api_secret
         )
