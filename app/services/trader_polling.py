@@ -1,14 +1,17 @@
 import time
+from datetime import datetime
 from threading import Thread
 from typing import Callable, Literal, Optional
 
+from .abstract import AbstractService
 from .connectors import EXCHANGE_TO_POLLING_SERVICE, AbstractExchangeConnector
 from ..configuration import logger, config
 from ..schemas.enums import BalanceStatus
 from ..schemas.models import UserSettings, TraderSettings
+from ..schemas.types import ServiceStatus
 
 
-class TraderPollingService(Thread):
+class TraderPollingService(AbstractService, Thread):
     """
     Класс, который отвечает за сравнение ордеров и позиций клиента и трейдера.
     """
@@ -20,7 +23,8 @@ class TraderPollingService(Thread):
             trader_settings: TraderSettings,
             interval: int | float = config.TRADER_POLLING_INTERVAL
     ) -> None:
-        super().__init__(daemon=True)
+        AbstractService.__init__(self)
+        Thread.__init__(self, daemon=True)
 
         self._connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]] = \
             connector_factory
@@ -30,10 +34,26 @@ class TraderPollingService(Thread):
 
         self._interval: int | float = interval
 
+        self._last_update_time: int | float = 0.00  # for status
+
+    def get_status(self) -> ServiceStatus:
+        return ServiceStatus(
+            status=(
+                    bool(self._connector_factory("client"))
+                    and bool(self._connector_factory("trader"))
+                    and self._last_update_time + 60 > time.time()
+            ),
+            last_update_time=datetime.fromtimestamp(self._last_update_time)
+        )
+
+    get_status.__doc__ = AbstractService.get_status.__doc__
+
     def run(self) -> None:
         """ Service entry point """
         while True:
             try:
+                self._last_update_time = time.time()
+
                 if not self._check_statuses():
                     continue
 

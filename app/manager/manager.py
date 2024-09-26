@@ -3,6 +3,7 @@ from typing import Optional, Literal
 from ..configuration import logger
 from ..database import Keys, Database
 from ..schemas.models import UserSettings, TraderSettings
+from ..schemas.types import UnifiedServiceStatus
 from ..services import *
 from ..utils import request_model
 
@@ -70,6 +71,17 @@ class ServiceManager:
         cls._balance_updater_service.start()
         cls._trader_polling_service.start()
         cls._trader_websocket_service.start()
+
+    @classmethod
+    def get_service_statuses(cls) -> UnifiedServiceStatus:
+        """ Возвращает словарь со статусами всех сервисов. """
+        return UnifiedServiceStatus(
+            trader_websocket_status=cls._trader_websocket_service.get_status(),
+            trader_polling_status=cls._trader_polling_service.get_status(),
+            balance_notifyer_status=cls._balance_notifyer_service.get_status(),
+            balance_updater_status=cls._balance_updater_service.get_status(),
+            balance_warden_status=cls._balance_warden_service.get_status()
+        )
 
     @classmethod
     def on_user_settings_update(cls, u: UserSettings) -> None:

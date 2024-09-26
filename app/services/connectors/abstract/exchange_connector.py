@@ -63,7 +63,6 @@ class AbstractExchangeConnector(ABC):
         """ Cancel all opened orders """
         raise NotImplementedError
 
-
     # @abstractmethod
     # def open_position(self, position: Position) -> None:
     #     """ Create market order """

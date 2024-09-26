@@ -77,6 +77,16 @@ class LogsView(BaseView):
         return await self.templates.TemplateResponse(request, "logs.html", context=context)
 
 
+class StatusView(BaseView):
+    name = "Status"
+
+    @expose("/status", methods=["GET"])
+    async def status(self, request: Request) -> HTMLResponse:
+        # Reading logs files
+        context: dict = dict(status=ServiceManager.get_service_statuses())
+        return await self.templates.TemplateResponse(request, "status.html", context=context)
+
+
 def register_admin_routes(app: FastAPI) -> None:
     # Создаем обьект-обработчик для админки
     admin: Admin = Admin(
@@ -92,6 +102,6 @@ def register_admin_routes(app: FastAPI) -> None:
     model_views: list[type[ModelView]] = [KeysAdmin]
     for m_view in model_views:
         admin.add_model_view(m_view)
-    base_views: list[type[BaseView]] = [LogsView]
+    base_views: list[type[BaseView]] = [StatusView, LogsView]
     for b_view in base_views:
         admin.add_base_view(b_view)

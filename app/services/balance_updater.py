@@ -1,12 +1,15 @@
 import time
+from datetime import datetime
 from threading import Thread
 from typing import Callable, Optional, Literal
 
+from .abstract import AbstractService
 from .connectors import AbstractExchangeConnector
 from ..configuration import config, logger
+from ..schemas.types import ServiceStatus
 
 
-class BalanceUpdaterService(Thread):
+class BalanceUpdaterService(AbstractService, Thread):
 
     def __init__(
             self,
@@ -18,13 +21,23 @@ class BalanceUpdaterService(Thread):
         :param connector_factory: Фабрика коннектора с биржей.
         :param balance_changed_callbacks: Куда передавать баланс при обновлении.
         """
-        super().__init__(daemon=True)
+        AbstractService.__init__(self)
+        Thread.__init__(self, daemon=True)
 
         self._connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]] \
             = connector_factory
         self._balance_changed_callbacks: list[callable] = balance_changed_callbacks
 
         self._interval: int | float = interval
+        self._last_update_time: int | float = 0.00  # for status
+
+    def get_status(self) -> ServiceStatus:
+        return ServiceStatus(
+            status=self._last_update_time + 60 > time.time(),
+            last_update_time=datetime.fromtimestamp(self._last_update_time)
+        )
+
+    get_status.__doc__ = AbstractService.get_status.__doc__
 
     def run(self) -> None:
         """ Точка запуска сервиса. """
@@ -41,6 +54,7 @@ class BalanceUpdaterService(Thread):
                     else:
                         for callback in self._balance_changed_callbacks:
                             try:
+                                self._last_update_time = time.time()
                                 callback(balance)
                             except Exception as e:
                                 logger.error(f"Error while called callback({callback.__name__}): {e}")

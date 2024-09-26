@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Literal, Optional
 
-from app.database import Keys
 from app.schemas.models import UserSettings, TraderSettings
 from .exchange_connector import AbstractExchangeConnector
 

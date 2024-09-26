@@ -1,18 +1,16 @@
+import time
+from datetime import datetime
 from typing import Callable, Literal, Optional
 
+from .abstract import AbstractService
 from .connectors import AbstractExchangeConnector, AbstractTraderWebsocket, EXCHANGE_TO_WEBSOCKET
 from ..configuration import logger
 from ..schemas.enums import BalanceStatus
 from ..schemas.models import UserSettings, TraderSettings
-
-"""
-ОТКРЫВАТЬ ТОЛЬКО ТЕ ПОЗИЦИИ, КОТОРЫЕ БЫЛИ ОТКРЫТЫ С НУЛЯ.
-
-ТАК ЖЕ ПРОВЕРЯТЬ ПОЛНОЕ ЗАКРЫТИЕ ПОЗИЦИЙ.
-"""
+from ..schemas.types import ServiceStatus
 
 
-class TraderWebsocketService:
+class TraderWebsocketService(AbstractService):
     """
     Класс, который отвечает за подключение вебсокетом к трейдеру, и прослушке его сигналов.
     """
@@ -23,6 +21,7 @@ class TraderWebsocketService:
             user_settings: UserSettings,
             trader_settings: TraderSettings,
     ) -> None:
+        super().__init__()
 
         self._connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]] = \
             connector_factory
@@ -31,6 +30,15 @@ class TraderWebsocketService:
         self._balance_status: BalanceStatus = BalanceStatus.NOT_DEFINED
 
         self._websocket: Optional[AbstractTraderWebsocket] = None
+        self._last_message_time: int | float = 0.0  # for logs
+
+    def get_status(self) -> ServiceStatus:
+        return ServiceStatus(
+            status=self._last_message_time + 60 * 60 * 24 > time.time(),
+            last_update_time=datetime.fromtimestamp(self._last_message_time)
+        )
+
+    get_status.__doc__ = AbstractService.get_status.__doc__
 
     def start(self) -> None:
         """ Запуск соединения с вебсокетом трейдера. """
@@ -56,7 +64,11 @@ class TraderWebsocketService:
     def _message_middleware(self, msg: dict) -> None:
         """ Мидлварь для принятия сообщения, в котором проводятся дополнительные проверки. """
         logger.debug(f"Websocket message: {msg}")
-        self._websocket.handle_websocket_message(msg)
+        self._last_message_time = time.time()
+        try:
+            self._websocket.handle_websocket_message(msg)
+        except Exception as e:
+            logger.error(f"Exception while handling websocket message({msg}): {e}")
 
     def _check_statuses(self) -> bool:
         """ Функция проверяет все статусы и переменные, перед тем как дать разрешение на продолжение работы. """

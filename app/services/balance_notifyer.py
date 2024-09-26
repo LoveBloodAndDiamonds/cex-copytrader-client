@@ -1,13 +1,16 @@
+from datetime import datetime
 import time
 
 import requests
 
+from .abstract import AbstractService
 from ..configuration import config, logger
 from ..schemas.exceptions import MasterServerConnectionError
 from ..schemas.models import UserBalanceUpdate
+from ..schemas.types import ServiceStatus
 
 
-class BalanceNotifyerService:
+class BalanceNotifyerService(AbstractService):
     """
     Сервис, который отправляет обновление баланса на мастер-сервер.
     """
@@ -16,9 +19,19 @@ class BalanceNotifyerService:
             self,
             interval: int | float = config.BALANCE_NOTIFY_INTERVAL
     ) -> None:
+        super().__init__()
+
         self._interval: int | float = interval
 
         self._last_notify_time: float = 0
+
+    def get_status(self) -> ServiceStatus:
+        return ServiceStatus(
+            status=self._last_notify_time + 60 > time.time(),
+            last_update_time=datetime.fromtimestamp(self._last_notify_time)
+        )
+
+    get_status.__doc__ = AbstractService.get_status.__doc__
 
     def balance_update_event(self, balance: float) -> None:
         """

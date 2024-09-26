@@ -44,18 +44,15 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
 
     def handle_websocket_message(self, msg: dict) -> None:
         """ Функция принимает и обрабатывает сообщение с вебсокета. """
-        try:
-            event_type: str = msg.get("e")
-            if event_type == "ORDER_TRADE_UPDATE":
-                self._executor.submit(self._order_trade_update, msg)
-            elif event_type == "ACCOUNT_CONFIG_UPDATE":
-                self._executor.submit(self._account_config_update, msg)
-            elif event_type == "ACCOUNT_UPDATE":
-                self._executor.submit(self._account_update, msg)
-            else:
-                logger.debug(f"Unhandled event type {event_type}: {msg}")
-        except Exception as e:
-            logger.error(f"Exception while handling websocket message({msg}): {e}")
+        event_type: str = msg.get("e")
+        if event_type == "ORDER_TRADE_UPDATE":
+            self._executor.submit(self._order_trade_update, msg)
+        elif event_type == "ACCOUNT_CONFIG_UPDATE":
+            self._executor.submit(self._account_config_update, msg)
+        elif event_type == "ACCOUNT_UPDATE":
+            self._executor.submit(self._account_update, msg)
+        else:
+            logger.debug(f"Unhandled event type {event_type}: {msg}")
 
     def _order_trade_update(self, msg: dict) -> None:
         """

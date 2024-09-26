@@ -1,13 +1,16 @@
+import time
+from datetime import datetime
 from typing import Callable, Literal, Optional
 
+from .abstract import AbstractService
 from .connectors import AbstractExchangeConnector
 from ..configuration import logger
 from ..schemas.enums import BalanceStatus
 from ..schemas.models import UserSettings
-from ..schemas.types import Order, Position
+from ..schemas.types import Order, Position, ServiceStatus
 
 
-class BalanceWardenService:
+class BalanceWardenService(AbstractService):
     """
     Класс проверяет текущий баланс пользователя с порогом баланса для отключения торговли.
     """
@@ -21,6 +24,8 @@ class BalanceWardenService:
         """
         :param balance_threshold: Настройки пользователя
         """
+        AbstractService.__init__(self)
+
         self._connector_factory: Callable[[Literal["trader", "client"]], Optional[AbstractExchangeConnector]] = \
             connector_factory
         self._balance_threshold: float = balance_threshold
@@ -29,9 +34,20 @@ class BalanceWardenService:
         # Используется чтобы не вызывать функции много раз попусту
         self._balance_status: BalanceStatus = BalanceStatus.NOT_DEFINED
 
+        self._last_update_time: int | float = 0.00  # for status
+
+    def get_status(self) -> ServiceStatus:
+        return ServiceStatus(
+            status=self._balance_status == BalanceStatus.CAN_TRADE and self._last_update_time + 60 > time.time(),
+            last_update_time=datetime.fromtimestamp(self._last_update_time)
+        )
+
+    get_status.__doc__ = AbstractService.get_status.__doc__
+
     def balance_update_event(self, balance: float) -> None:
         """ Функция принимает текущий баланс пользователя и сравнивает его с порогом баланса. """
         try:
+            self._last_update_time = time.time()
             if balance < self._balance_threshold and self._balance_status != BalanceStatus.CANT_TRADE:
                 logger.critical(f"Current balance({balance}) lower than balance threshold({self._balance_threshold})!")
                 self._change_status(BalanceStatus.CANT_TRADE)
@@ -43,11 +59,14 @@ class BalanceWardenService:
             logger.error(f"Error while warden client balance: {e}")
 
     def _change_status(self, status: BalanceStatus) -> None:
-        self._balance_status: BalanceStatus = status
+        try:
+            self._balance_status: BalanceStatus = status
 
-        # Send callbacks that app can not trade anymore
-        for callback in self._balance_status_callbacks:
-            callback(self._balance_status)
+            # Send callbacks that app can not trade anymore
+            for callback in self._balance_status_callbacks:
+                callback(self._balance_status)
+        except Exception as e:
+            logger.error(f"Error while change services balance status: {e}")
 
     def _stop_trade_event(self) -> None:
         # Close all orders and positions

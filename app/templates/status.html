@@ -1,0 +1,109 @@
+{% extends "sqladmin/layout.html" %}
+
+{% block content %}
+    {{ super() }}
+
+    <style>
+        table {
+            width: 60%;
+            margin: 0 auto;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: darkgrey;
+        }
+
+        .status-true {
+            color: green;
+        }
+
+        .status-false {
+            color: red;
+        }
+    </style>
+
+    <h2 style="text-align: center;">Service Statuses</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th>Status</th>
+                <th>Last Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Trader Websocket</td>
+                <td>
+                    {% if status.trader_websocket_status.status is true %}
+                        <span class="status-true">✅</span>
+                    {% elif status.trader_websocket_status.status is false %}
+                        <span class="status-false">❌</span>
+                    {% else %}
+                        Unknown
+                    {% endif %}
+                </td>
+                <td>{{ status.trader_websocket_status.last_update_time }}</td>
+            </tr>
+            <tr>
+                <td>Trader Polling</td>
+                <td>
+                    {% if status.trader_polling_status.status is true %}
+                        <span class="status-true">✅</span>
+                    {% elif status.trader_polling_status.status is false %}
+                        <span class="status-false">❌</span>
+                    {% else %}
+                        Unknown
+                    {% endif %}
+                </td>
+                <td>{{ status.trader_polling_status.last_update_time }}</td>
+            </tr>
+            <tr>
+                <td>Balance Notifyer</td>
+                <td>
+                    {% if status.balance_notifyer_status.status is true %}
+                        <span class="status-true">✅</span>
+                    {% elif status.balance_notifyer_status.status is false %}
+                        <span class="status-false">❌</span>
+                    {% else %}
+                        Unknown
+                    {% endif %}
+                </td>
+                <td>{{ status.balance_notifyer_status.last_update_time }}</td>
+            </tr>
+            <tr>
+                <td>Balance Updater</td>
+                <td>
+                    {% if status.balance_updater_status.status is true %}
+                        <span class="status-true">✅</span>
+                    {% elif status.balance_updater_status.status is false %}
+                        <span class="status-false">❌</span>
+                    {% else %}
+                        Unknown
+                    {% endif %}
+                </td>
+                <td>{{ status.balance_updater_status.last_update_time }}</td>
+            </tr>
+            <tr>
+                <td>Balance Warden</td>
+                <td>
+                    {% if status.balance_warden_status.status is true %}
+                        <span class="status-true">✅</span>
+                    {% elif status.balance_warden_status.status is false %}
+                        <span class="status-false">❌</span>
+                    {% else %}
+                        Unknown
+                    {% endif %}
+                </td>
+                <td>{{ status.balance_warden_status.last_update_time }}</td>
+            </tr>
+        </tbody>
+    </table>
+{% endblock %}

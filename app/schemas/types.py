@@ -1,4 +1,19 @@
-from typing import TypeVar, TypeAlias
+from typing import TypeVar, TypeAlias, TypedDict, Optional
+from datetime import datetime
+
+
+class ServiceStatus(TypedDict):
+    status: Optional[bool]
+    last_update_time: datetime
+
+
+class UnifiedServiceStatus(TypedDict):
+    trader_websocket_status: ServiceStatus
+    trader_polling_status: ServiceStatus
+    balance_notifyer_status: ServiceStatus
+    balance_updater_status: ServiceStatus
+    balance_warden_status: ServiceStatus
+
 
 # TypeVar's
 M = TypeVar("M")
