@@ -10,10 +10,7 @@ from typing import Literal
 
 from dotenv import load_dotenv
 from loguru import logger
-import nest_asyncio
 
-# To fix ThreadedWebsocketManager bug
-nest_asyncio.apply()
 
 load_dotenv()
 
