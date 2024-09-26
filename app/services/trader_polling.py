@@ -52,10 +52,10 @@ class TraderPollingService(AbstractService, Thread):
         """ Service entry point """
         while True:
             try:
-                self._last_update_time = time.time()
-
                 if not self._check_statuses():
                     continue
+
+                self._last_update_time = time.time()
 
                 EXCHANGE_TO_POLLING_SERVICE[self._trader_settings.exchange].process(
                     connector_factory=self._connector_factory,
