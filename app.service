@@ -7,8 +7,8 @@ User=root
 Group=root
 Type=simple
 WorkingDirectory=/root/AbTradebotSlaveV2
-ExecStartPre=/bin/bash -c 'git pull && pip3 install -r requirements.txt'
-ExecStart=/bin/bash -c 'python3 -m app'
+ExecStartPre=/bin/bash -c 'git pull && poetry install'
+ExecStart=/bin/bash -c 'poetry run python3 -m app'
 Restart=always
 
 [Install]
