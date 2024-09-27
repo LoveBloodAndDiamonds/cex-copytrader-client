@@ -38,11 +38,7 @@ class TraderPollingService(AbstractService, Thread):
 
     def get_status(self) -> ServiceStatus:
         return ServiceStatus(
-            status=(
-                    bool(self._connector_factory("client"))
-                    and bool(self._connector_factory("trader"))
-                    and self._last_update_time + 60 > time.time()
-            ),
+            status=self._check_statuses(),
             last_update_time=datetime.fromtimestamp(self._last_update_time).isoformat(timespec='seconds')
         )
 

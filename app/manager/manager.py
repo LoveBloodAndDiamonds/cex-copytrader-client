@@ -87,12 +87,14 @@ class ServiceManager:
     def on_user_settings_update(cls, u: UserSettings) -> None:
         logger.info(f"User settings update: {u}")
         cls._balance_warden_service.on_user_settings_update(u)
+        cls._trader_polling_service.on_user_settings_update(u)
         cls._trader_websocket_service.on_user_settings_update(u)
 
     @classmethod
     def on_trader_settings_update(cls, u: TraderSettings) -> None:
         logger.info(f"Trader settings update: {u}")
         cls._init_trader_connector(u)  # ITS IMPORTANT TO DO IT BEFORE ALL OTHER ACTIONS
+        cls._trader_polling_service.on_trader_settings_update(u)
         cls._trader_websocket_service.on_trader_settings_update(u)
 
     @classmethod

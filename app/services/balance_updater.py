@@ -33,7 +33,7 @@ class BalanceUpdaterService(AbstractService, Thread):
 
     def get_status(self) -> ServiceStatus:
         return ServiceStatus(
-            status=self._last_update_time + 60 > time.time(),
+            status=self._last_update_time + self._interval * 3 > time.time(),
             last_update_time=datetime.fromtimestamp(self._last_update_time).isoformat(timespec='seconds')
         )
 

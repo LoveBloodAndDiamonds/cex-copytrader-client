@@ -40,7 +40,7 @@ class TraderWebsocketService(AbstractService):
 
     def get_status(self) -> ServiceStatus:
         return ServiceStatus(
-            status=self._last_message_time + 60 * 60 * 12 > time.time(),
+            status=self._last_message_time + 60 * 60 * 12 > time.time() and self._check_statuses(),
             last_update_time=datetime.fromtimestamp(self._last_message_time).isoformat(timespec='seconds')
         )
 
@@ -48,6 +48,10 @@ class TraderWebsocketService(AbstractService):
 
     def start(self) -> None:
         """ Запуск соединения с вебсокетом трейдера. """
+        if not self._check_statuses():
+            logger.info("Status to start trader websocket is false")
+            return
+
         logger.info("Starting trader websocket")
         self._websocket = EXCHANGE_TO_WEBSOCKET[self._trader_settings.exchange](
             callback=self._message_middleware,
@@ -75,6 +79,7 @@ class TraderWebsocketService(AbstractService):
             try:
                 time.sleep(100)
                 if self._next_restart_time and time.time() > self._next_restart_time:
+                    self._next_restart_time: int | float = time.time() + self._next_restart_time
                     self._restart()
             except Exception as e:
                 logger.error(f"Error in restart thread func: {e}")
@@ -83,6 +88,11 @@ class TraderWebsocketService(AbstractService):
         """ Мидлварь для принятия сообщения, в котором проводятся дополнительные проверки. """
         logger.debug(f"Websocket message: {args}, {kwargs}")
         self._last_message_time = time.time()
+
+        if not self._check_statuses():
+            logger.info("Status for processing ws message is false.")
+            return
+
         try:
             self._websocket.handle_websocket_message(*args, **kwargs)
         except Exception as e:

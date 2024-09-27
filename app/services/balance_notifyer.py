@@ -27,7 +27,7 @@ class BalanceNotifyerService(AbstractService):
 
     def get_status(self) -> ServiceStatus:
         return ServiceStatus(
-            status=self._last_notify_time + 60 > time.time(),
+            status=self._last_notify_time + self._interval * 3 > time.time(),
             last_update_time=datetime.fromtimestamp(self._last_notify_time).isoformat(timespec='seconds')
         )
 
