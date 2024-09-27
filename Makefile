@@ -1,5 +1,11 @@
-run-app-local:
-	uvicorn app.__main__:app --reload --host 127.0.0.1 --port 8000 --log-level error
+move-service:
+	cp app.service /etc/systemd/system/ && sudo systemctl daemon-reload && echo " -> service was moved and daemon was reloaded"
 
-run-app:
-	uvicorn app.__main__:app --log-level error --host 0.0.0.0 --port 80
+run-service:
+	sudo systemctl start app && sudo systemctl enable app  && echo " -> service was launched"
+
+stop-service:
+	sudo systemctl stop app && echo " -> service was stopped"
+
+restart-service:
+	sudo systemctl restart app && echo " -> service was restarted"
