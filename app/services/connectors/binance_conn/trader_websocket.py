@@ -30,6 +30,9 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
 
         self._is_running: bool = False
 
+        # Its important to fix connector here
+        self._trader_connector: AbstractExchangeConnector = self._connector_factory("trader")
+
         self._executor: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=max_workers)
 
         self._ws: UMFuturesWebsocketClient | None = None
@@ -65,7 +68,7 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
             on_error=lambda *args: logger.error(f"Trader websocket error: {args}"),
             on_pong=lambda *args: logger.debug(f"Trader websocket pong: {args}"),
         )
-        self._listen_key: str = self._connector_factory("trader").create_listen_key()
+        self._listen_key: str = self._trader_connector.create_listen_key()
         self._ws.user_data(listen_key=self._listen_key)
 
         self._executor.submit(self._listen_key_renew_thread)
@@ -76,7 +79,7 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
         self._is_running: bool = False
         try:
             if self._listen_key:
-                self._connector_factory("trader").close_listen_key(listen_key=self._listen_key)
+                self._trader_connector.close_listen_key(listen_key=self._listen_key)
         except Exception as e:
             logger.error(f"Error while closing listen key on stop websocket: {e}")
         self._listen_key = None
@@ -118,7 +121,7 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
             try:
                 if self._is_running:  # After w8ting time.sleep() flag can changed
                     if self._listen_key:
-                        self._connector_factory("trader").renew_listen_key(listen_key=self._listen_key)
+                        self._trader_connector.renew_listen_key(listen_key=self._listen_key)
                         logger.debug("Listen key renewed")
             except Exception as e:
                 logger.error(f"Error while renew listen key: {e}")

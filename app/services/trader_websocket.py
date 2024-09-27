@@ -115,7 +115,8 @@ class TraderWebsocketService(AbstractService):
     def on_user_settings_update(self, u: UserSettings) -> None:
         logger.info(f"User settings update event: {u}")
         self._user_settings: UserSettings = u
-        self._restart()
+        # User settings update always got before trader settings update, so we dont need to restart ws here.
+        # self._restart()
 
     def on_trader_settings_update(self, u: TraderSettings) -> None:
         logger.info(f"Trader settings update event: {u}")
