@@ -23,4 +23,5 @@ binance-futures-connector = "^4.0.0"
 
 [build-system]
 requires = ["poetry-core"]
+package-mode = false
 build-backend = "poetry.core.masonry.api"

@@ -1,12 +1,12 @@
 [Unit]
-Description=Сервис клиентского приложения AbTradebot
+Description=Сервис приложения cex-copytrader-client
 After=network.target
 
 [Service]
 User=root
 Group=root
 Type=simple
-WorkingDirectory=/root/AbTradebotSlaveV2
+WorkingDirectory=/root/cex-copytrader-client
 ExecStartPre=/bin/bash -c 'git pull && poetry install'
 ExecStart=/bin/bash -c 'poetry run python3 -m app'
 Restart=always
