@@ -92,8 +92,8 @@ class ServiceManager:
     @classmethod
     def on_trader_settings_update(cls, u: TraderSettings) -> None:
         logger.info(f"Trader settings update: {u}")
+        cls._init_trader_connector(u)  # ITS IMPORTANT TO DO IT BEFORE ALL OTHER ACTIONS
         cls._trader_websocket_service.on_trader_settings_update(u)
-        cls._init_trader_connector(u)
 
     @classmethod
     def on_api_keys_update(cls, u: Keys) -> None:

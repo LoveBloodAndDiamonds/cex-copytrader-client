@@ -69,6 +69,7 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
         self._ws.user_data(listen_key=self._listen_key)
 
         self._executor.submit(self._listen_key_renew_thread)
+        self._executor.submit(self._ping_thread)
 
     def stop_websocket(self) -> None:
         """ Функция останавливает вебсокет. """
@@ -99,12 +100,13 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
     def _ping_thread(self) -> None:
         """ Function pings binance.com """
         while self._is_running:
+            time.sleep(60)  # every 60 sec
             try:
-                if self._ws:
-                    self._ws.ping()
+                if self._is_running:
+                    if self._ws:
+                        self._ws.ping()
             except Exception as e:
                 logger.error(f"Error while ping: {e}")
-            time.sleep(60)  # every 60 sec
 
     def _listen_key_renew_thread(self) -> None:
         """
@@ -112,13 +114,14 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
         :return:
         """
         while self._is_running:
+            time.sleep(60 * 20)  # every 20 min
             try:
-                if self._listen_key:
-                    self._connector_factory("trader").renew_listen_key(listen_key=self._listen_key)
-                    logger.debug("Listen key renewed")
+                if self._is_running:  # After w8ting time.sleep() flag can changed
+                    if self._listen_key:
+                        self._connector_factory("trader").renew_listen_key(listen_key=self._listen_key)
+                        logger.debug("Listen key renewed")
             except Exception as e:
                 logger.error(f"Error while renew listen key: {e}")
-            time.sleep(60 * 20)  # every 20 min
 
     def _order_trade_update(self, msg: dict) -> None:
         """

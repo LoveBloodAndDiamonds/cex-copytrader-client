@@ -1,4 +1,4 @@
-import json
+import threading
 import time
 from datetime import datetime
 from typing import Callable, Literal, Optional
@@ -31,11 +31,16 @@ class TraderWebsocketService(AbstractService):
         self._balance_status: BalanceStatus = BalanceStatus.NOT_DEFINED
 
         self._websocket: Optional[AbstractTraderWebsocket] = None
+        self._next_restart_time: int | float = 0.0  # for restart websocket in while True cycle
+        self._restart_interval: int | float = 60 * 60 * 12  # 12 hours
         self._last_message_time: int | float = 0.0  # for logs
+
+        # Launch restart thread one time
+        threading.Thread(target=self._restart_thread).start()
 
     def get_status(self) -> ServiceStatus:
         return ServiceStatus(
-            status=self._last_message_time + 60 * 60 * 24 > time.time(),
+            status=self._last_message_time + 60 * 60 * 12 > time.time(),
             last_update_time=datetime.fromtimestamp(self._last_message_time).isoformat(timespec='seconds')
         )
 
@@ -43,20 +48,19 @@ class TraderWebsocketService(AbstractService):
 
     def start(self) -> None:
         """ Запуск соединения с вебсокетом трейдера. """
-        logger.debug("Starting trader websocket")
+        logger.info("Starting trader websocket")
         self._websocket = EXCHANGE_TO_WEBSOCKET[self._trader_settings.exchange](
             callback=self._message_middleware,
             connector_factory=self._connector_factory,
             user_settings=self._user_settings,
             trader_settings=self._trader_settings,
         )
+        self._next_restart_time: int | float = time.time() + self._next_restart_time
         self._websocket.start_websocket()
-
-    # todo restart every 12 hours
 
     def _restart(self) -> None:
         """ Перезапуск соединения с вебсокетом трейдера. """
-        logger.debug("Restarting trader websocket")
+        logger.info("Restarting trader websocket")
         if self._websocket:
             try:
                 self._websocket.stop_websocket()
@@ -64,6 +68,16 @@ class TraderWebsocketService(AbstractService):
                 logger.error(f"Can not stop previous websocket connection: {e}")
 
         self.start()
+
+    def _restart_thread(self) -> None:
+        """ Функция перезапускает вебсокет каждые 12 часов. """
+        while True:
+            try:
+                time.sleep(100)
+                if self._next_restart_time and time.time() > self._next_restart_time:
+                    self._restart()
+            except Exception as e:
+                logger.error(f"Error in restart thread func: {e}")
 
     def _message_middleware(self, *args, **kwargs) -> None:
         """ Мидлварь для принятия сообщения, в котором проводятся дополнительные проверки. """
