@@ -5,6 +5,7 @@ __all__ = ["exchange_info", ]
 
 import re
 import time
+
 import requests
 
 from app.configuration import logger

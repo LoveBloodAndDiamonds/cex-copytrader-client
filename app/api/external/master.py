@@ -7,7 +7,6 @@ from starlette.responses import JSONResponse
 from app.configuration import logger, config
 from app.manager import ServiceManager
 from app.schemas.models import TraderSettings, UserSettings
-from app.schemas.types import UnifiedServiceStatus
 
 router = APIRouter()
 

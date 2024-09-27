@@ -8,7 +8,6 @@ from ..abstract import AbstractExchangeConnector
 
 
 class BinanceConnector(AbstractExchangeConnector):
-
     recvWindow: dict = {"recvWindow": 20000}
 
     def __init__(self, api_key: str, api_secret: str) -> None:
