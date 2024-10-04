@@ -30,13 +30,7 @@ def startup() -> None:
     register_admin_routes(app)
 
     # Run some background tasks
-    while True:
-        try:
-            ServiceManager.run_services()
-            break
-        except Exception as err:
-            logger.error(f"Can not run services: {err}")
-            time.sleep(60 * 5)  # sleep 5 min
+    ServiceManager.run_services()
 
 
 def shutdown() -> None:
@@ -50,5 +44,6 @@ try:
     uvicorn.run(app, host=config.SERVER_HOST, port=config.SERVER_PORT, log_level="error")
 except Exception as e:
     logger.exception(f"Unexcepted exception at top level: {e}")
+    time.sleep(60 * 5)  # sleep 5 min
 finally:
     shutdown()
