@@ -19,3 +19,5 @@ try:
     binance.lib.utils.get_timestamp = _patched_get_timestamp
 except Exception as e:
     logger.error(f"Error while monkey patching binance timestamp offset: {e}")
+
+

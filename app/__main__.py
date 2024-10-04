@@ -1,3 +1,5 @@
+import time
+
 import uvicorn
 from fastapi import FastAPI
 
@@ -28,7 +30,13 @@ def startup() -> None:
     register_admin_routes(app)
 
     # Run some background tasks
-    ServiceManager.run_services()
+    while True:
+        try:
+            ServiceManager.run_services()
+            break
+        except Exception as err:
+            logger.error(f"Can not run services: {err}")
+            time.sleep(60 * 5)  # sleep 5 min
 
 
 def shutdown() -> None:
