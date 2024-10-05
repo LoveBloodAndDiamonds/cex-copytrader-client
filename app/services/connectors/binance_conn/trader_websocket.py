@@ -64,9 +64,9 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
             on_message=self._callback,
             on_open=lambda *args: logger.info(f"Trader websocket opened: {args}"),
             on_close=lambda *args: logger.info(f"Trader websocket closed: {args}"),
-            on_ping=lambda *args: logger.debug(f"Trader websocket ping: {args}"),
+            # on_ping=lambda *args: logger.debug(f"Trader websocket ping: {args}"),
             on_error=lambda *args: logger.error(f"Trader websocket error: {args}"),
-            on_pong=lambda *args: logger.debug(f"Trader websocket pong: {args}"),
+            # on_pong=lambda *args: logger.debug(f"Trader websocket pong: {args}"),
         )
         self._listen_key: str = self._trader_connector.create_listen_key()
         self._ws.user_data(listen_key=self._listen_key)
@@ -109,6 +109,7 @@ class BinanceTraderWebsocket(AbstractTraderWebsocket):
                     if self._ws:
                         self._ws.ping()
             except Exception as e:
+                # Error while ping: socket is already closed.
                 logger.error(f"Error while ping: {e}")
 
     def _listen_key_renew_thread(self) -> None:
