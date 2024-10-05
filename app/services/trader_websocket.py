@@ -35,6 +35,9 @@ class TraderWebsocketService(AbstractService):
         self._restart_interval: int | float = 60 * 60 * 12  # 12 hours
         self._last_message_time: int | float = 0.0  # for logs
 
+        # Launch restart thread one time
+        threading.Thread(target=self._restart_thread).start()
+
     def get_status(self) -> ServiceStatus:
         return ServiceStatus(
             status=self._last_message_time + 60 * 60 * 12 > time.time() and self._check_statuses(),
@@ -56,11 +59,8 @@ class TraderWebsocketService(AbstractService):
             user_settings=self._user_settings,
             trader_settings=self._trader_settings,
         )
-        self._next_restart_time: int | float = time.time() + self._next_restart_time
+        self._next_restart_time: int | float = time.time() + self._restart_interval
         self._websocket.start_websocket()
-
-        # Launch restart thread one time
-        threading.Thread(target=self._restart_thread).start()
 
     def _restart(self) -> None:
         """ Перезапуск соединения с вебсокетом трейдера. """
@@ -79,7 +79,7 @@ class TraderWebsocketService(AbstractService):
             try:
                 time.sleep(100)
                 if self._next_restart_time and time.time() > self._next_restart_time:
-                    self._next_restart_time: int | float = time.time() + self._next_restart_time
+                    self._next_restart_time: int | float = time.time() + self._restart_interval
                     self._restart()
             except Exception as e:
                 logger.error(f"Error in restart thread func: {e}")
